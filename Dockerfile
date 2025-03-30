@@ -32,6 +32,7 @@ RUN pip install -r requirements.txt
 # Copy application files
 COPY form_submitter.py .
 COPY form_config.json .
+COPY random_data.json .
 
 # Run the script
 CMD ["python", "form_submitter.py"] 
