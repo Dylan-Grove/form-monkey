@@ -1,6 +1,6 @@
 FROM python:3.9-slim
 
-# Install Chrome and dependencies
+# Install dependencies
 RUN apt-get update && apt-get install -y \
     wget \
     gnupg \
@@ -13,7 +13,6 @@ RUN apt-get update && apt-get install -y \
     && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list \
     && apt-get update \
     && apt-get install -y google-chrome-stable \
-    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Install specific version of ChromeDriver
@@ -28,9 +27,9 @@ WORKDIR /app
 
 # Copy requirements and install dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
 
-# Copy the script and config
+# Copy application files
 COPY form_submitter.py .
 COPY form_config.json .
 

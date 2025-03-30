@@ -1,121 +1,138 @@
-# Form Submission Automation
+# Form Monkey 🐒
 
-A Python script that automates form submissions using Selenium WebDriver, designed to run in a Docker container.
+A chaos engineering tool for automated form submissions with configurable delays and randomization.
 
 ## Features
 
-- Configurable submission intervals (1-30 minutes)
+- Configurable form submission intervals (3-30 minutes)
 - Random data generation for form fields
-- Realistic Canadian phone numbers
-- Random email generation with common domains
-- Detailed logging
-- Configurable form field selectors via JSON config
-- Docker support for easy deployment
+- Support for multiple form configurations
+- Verbosity levels (minimal, balanced, verbose)
+- Anti-bot detection bypass
+- Detailed logging and debugging
 
-## Prerequisites
+## Requirements
 
-- Docker installed on your system
-- Docker Desktop running (for Windows/Mac)
+- Python 3.9+
+- Docker (for containerized execution)
+- Chrome/Chromium browser (for form submission)
 
-## Configuration
+## Installation
 
-The script can be configured using environment variables:
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/form-monkey.git
+cd form-monkey
+```
 
-- `MIN_INTERVAL`: Minimum time between submissions in seconds (default: 60)
-- `MAX_INTERVAL`: Maximum time between submissions in seconds (default: 1800)
-- `TARGET_URL`: The URL of the form to submit
-- `FORM_CONFIG`: The form configuration to use from form_config.json (default: "default")
+2. Build the Docker image:
+```bash
+docker build -t form-monkey .
+```
 
-## Form Configuration
+## Usage
 
-The script uses a JSON configuration file (`form_config.json`) to define form field selectors. You can add new configurations or modify existing ones.
+### Basic Usage
 
-Example configuration:
+Run the form submitter with default configuration:
+```bash
+docker run -it --rm form-monkey
+```
+
+### Configuration
+
+1. Create a form configuration in `form_config.json`:
 ```json
 {
     "default": {
-        "first_name": {
-            "selector": "input[name='first_name']",
-            "type": "text",
-            "required": true,
-            "min_length": 2
+        "verbosity": "balanced",
+        "timing": {
+            "min_interval": 180,
+            "max_interval": 1800
+        }
+    },
+    "example_form": {
+        "url": "https://example.com/form",
+        "verbosity": "balanced",
+        "timing": {
+            "min_interval": 180,
+            "max_interval": 1800
         },
-        "last_name": {
-            "selector": "input[name='last_name']",
-            "type": "text",
-            "required": true,
-            "min_length": 2
-        },
-        "email": {
-            "selector": "input[name='email']",
-            "type": "email",
-            "required": true
-        },
-        "phone": {
-            "selector": "input[name='phone']",
-            "type": "tel",
-            "required": true
-        },
-        "submit_button": {
-            "selector": "//button[contains(text(), 'START')]",
-            "type": "xpath"
+        "fields": {
+            "first_name": {
+                "selector": "#first_name",
+                "type": "text",
+                "required": true,
+                "validation": {
+                    "min_length": 2,
+                    "max_length": 50
+                }
+            },
+            "last_name": {
+                "selector": "#last_name",
+                "type": "text",
+                "required": true,
+                "validation": {
+                    "min_length": 2,
+                    "max_length": 50
+                }
+            },
+            "email": {
+                "selector": "#email",
+                "type": "email",
+                "required": true,
+                "validation": {
+                    "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+                }
+            },
+            "phone": {
+                "selector": "#phone",
+                "type": "tel",
+                "required": true,
+                "validation": {
+                    "pattern": "^\\d{10}$"
+                }
+            }
         }
     }
 }
 ```
 
-## Building the Docker Image
-
+2. Run with specific configuration:
 ```bash
-docker build -t form-submitter .
+docker run -it --rm -e FORM_CONFIG=example_form form-monkey
 ```
 
-## Running the Container
+### Environment Variables
 
-### Example 1: Using Default Configuration
+- `FORM_CONFIG`: Name of the form configuration to use (default: "default")
+- `VERBOSITY`: Logging verbosity level (minimal, balanced, verbose)
+- `MIN_INTERVAL`: Minimum time between submissions in seconds (overrides config)
+- `MAX_INTERVAL`: Maximum time between submissions in seconds (overrides config)
 
+### Help
+
+Run with --help to see all available options:
 ```bash
-docker run -it --rm \
-  -e MIN_INTERVAL=60 \
-  -e MAX_INTERVAL=1800 \
-  -e TARGET_URL="https://example.com/form" \
-  form-submitter
+docker run -it --rm form-monkey --help
 ```
 
-### Example 2: Using Custom Form Configuration
+## Development
 
-```bash
-docker run -it --rm \
-  -e MIN_INTERVAL=60 \
-  -e MAX_INTERVAL=1800 \
-  -e TARGET_URL="https://example.com/form" \
-  -e FORM_CONFIG="custom_config" \
-  form-submitter
-```
+### Adding New Form Configurations
 
-### Example 3: Using Predefined Configuration (crzyunbelevableofer.club)
+1. Add a new configuration section to `form_config.json`
+2. Define form fields with their selectors and validation rules
+3. Run with the new configuration name
 
-```bash
-docker run -it --rm \
-  -e MIN_INTERVAL=60 \
-  -e MAX_INTERVAL=1800 \
-  -e TARGET_URL="https://crzyunbelevableofer.club/cnt-frdscd/?oid=22&qze=3&hitid=9e8dc76f-77dc-445a-80b1-b5feda22964d&aff_sub=&saf=&cvu=&action=17at&aff_sub5=d8n6btsh5chjhfp837ugsme2&url_id=22&aff_sub2=&aff_sub3=&aff_sub4=17at&tracker=cg&language=&aff_sub6=&aff_sub7=&aff_sub8=&aff_sub9=&aff_sub10=&bzkbzk=gb" \
-  -e FORM_CONFIG="crzyunbelevableofer" \
-  form-submitter
-```
+### Customizing Data Generation
 
-## Logging
+The tool uses the Faker library for generating random data. You can customize the data generation by modifying the lists of:
+- Common words
+- Email domains
+- Area codes
+- Special characters
 
-The script provides detailed logging of:
-- Configuration parameters
-- Form submission attempts
-- Generated data
-- Success/failure status
-- Wait times between submissions
+## License
 
-## Notes
-
-- The script will submit a form immediately when started
-- A small random delay (5-15 seconds) follows the first submission
-- Subsequent submissions occur at random intervals between MIN_INTERVAL and MAX_INTERVAL
-- To stop the script, press Ctrl+C in the terminal where it's running
+MIT License - see LICENSE file for details

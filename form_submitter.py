@@ -12,6 +12,17 @@ import os
 import json
 from datetime import datetime, timedelta
 import undetected_chromedriver as uc
+import argparse
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Form Monkey - A chaos engineering tool for automated form submissions')
+    parser.add_argument('--help', action='help', help='Show this help message and exit')
+    parser.add_argument('--config', '-c', help='Form configuration to use (default: from FORM_CONFIG env var or "default")')
+    parser.add_argument('--verbosity', '-v', choices=['minimal', 'balanced', 'verbose'], 
+                       help='Logging verbosity level (default: from VERBOSITY env var or "balanced")')
+    parser.add_argument('--min-interval', type=int, help='Minimum time between submissions in seconds (overrides config)')
+    parser.add_argument('--max-interval', type=int, help='Maximum time between submissions in seconds (overrides config)')
+    return parser.parse_args()
 
 # Configure logging
 logging.basicConfig(
@@ -20,43 +31,31 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 
-<<<<<<< Updated upstream
-# Configuration
-MIN_INTERVAL = int(os.getenv('MIN_INTERVAL', 60))  # Default 1 minute
-MAX_INTERVAL = int(os.getenv('MAX_INTERVAL', 1800))  # Default 30 minutes
-FORM_CONFIG = os.getenv('FORM_CONFIG', 'default')  # Default form configuration to use
+# Parse command line arguments
+args = parse_args()
 
 # Load form configuration
 with open('form_config.json', 'r') as f:
     CONFIG = json.load(f)
 
 # Get the form configuration to use
-FORM_CONFIG_DATA = CONFIG.get(FORM_CONFIG, CONFIG['default'])
-URL = os.getenv('TARGET_URL', FORM_CONFIG_DATA['url'])
-=======
-# Load form configuration
-with open('form_config.json', 'r') as f:
-    CONFIG = json.load(f)
-
-# Get the form configuration to use
-FORM_CONFIG = os.getenv('FORM_CONFIG', 'default')
+FORM_CONFIG = args.config or os.getenv('FORM_CONFIG', 'default')
 FORM_CONFIG_DATA = CONFIG.get(FORM_CONFIG, CONFIG['default'])
 
 # Get timing configuration from config file
 timing_config = FORM_CONFIG_DATA.get('timing', {})
-MIN_INTERVAL = int(os.getenv('MIN_INTERVAL', timing_config.get('min_interval', 180)))  # Default 3 minutes
-MAX_INTERVAL = int(os.getenv('MAX_INTERVAL', timing_config.get('max_interval', 1800)))  # Default 30 minutes
+MIN_INTERVAL = args.min_interval or int(os.getenv('MIN_INTERVAL', timing_config.get('min_interval', 180)))  # Default 3 minutes
+MAX_INTERVAL = args.max_interval or int(os.getenv('MAX_INTERVAL', timing_config.get('max_interval', 1800)))  # Default 30 minutes
 
 # Get URL from environment or config
 URL = os.getenv('TARGET_URL', FORM_CONFIG_DATA['url'])
 
 # Get verbosity from environment or config
-VERBOSITY = os.getenv('VERBOSITY', FORM_CONFIG_DATA.get('verbosity', 'balanced'))
+VERBOSITY = args.verbosity or os.getenv('VERBOSITY', FORM_CONFIG_DATA.get('verbosity', 'balanced'))
 if VERBOSITY == 'minimal':
     logging.getLogger().setLevel(logging.WARNING)
 elif VERBOSITY == 'verbose':
     logging.getLogger().setLevel(logging.DEBUG)
->>>>>>> Stashed changes
 
 # Common Canadian area codes
 CANADIAN_AREA_CODES = [
@@ -652,17 +651,6 @@ def main():
             logging.info(f"Current time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
             submit_form()
             
-<<<<<<< Updated upstream
-            # Calculate next interval (1-30 minutes)
-            next_interval = random.uniform(MIN_INTERVAL, MAX_INTERVAL)
-            minutes = next_interval / 60
-            logging.info(f"Waiting {minutes:.1f} minutes before next submission")
-            logging.info(f"{'='*50}\n")
-            
-            time.sleep(next_interval)
-            
-=======
->>>>>>> Stashed changes
         except KeyboardInterrupt:
             logging.info("\nReceived keyboard interrupt. Shutting down...")
             break
