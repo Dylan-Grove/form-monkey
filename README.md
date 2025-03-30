@@ -1,5 +1,7 @@
 # Form Monkey - Automated Form Submission Tool
 
+Connect a monkey with a keyboard to your websites form submission.
+
 A Python-based tool for automated form submissions with support for various phone number formats and anti-bot detection.
 
 ## Features
