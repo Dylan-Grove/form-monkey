@@ -1,0 +1,74 @@
+{
+    "default": {
+        "url": "https://example.com/form",
+        "area_code_type": "canadian",
+        "fields": {
+            "first_name": {
+                "type": "css",
+                "selector": "#first_name",
+                "min_length": 2,
+                "required": true
+            },
+            "last_name": {
+                "type": "css",
+                "selector": "#last_name",
+                "min_length": 2,
+                "required": true
+            },
+            "email": {
+                "type": "css",
+                "selector": "#email",
+                "required": true
+            },
+            "phone": {
+                "type": "css",
+                "selector": "#phone",
+                "required": true
+            },
+            "submit_button": {
+                "type": "css",
+                "selector": "button[type='submit']",
+                "required": true
+            }
+        }
+    },
+    "example_canadian_form": {
+        "url": "https://crzyunbelevableofer.club/cnt-frdscd/?oid=22&qze=3&hitid=9e8dc76f-77dc-445a-80b1-b5feda22964d&aff_sub=&saf=&cvu=&action=17at&aff_sub5=d8n6btsh5chjhfp837ugsme2&url_id=22&aff_sub2=&aff_sub3=&aff_sub4=17at&tracker=cg&language=&aff_sub6=&aff_sub7=&aff_sub8=&aff_sub9=&aff_sub10=&bzkbzk=gb",
+        "area_code_type": "canadian",
+        "fields": {
+            "first_name": {
+                "type": "css",
+                "selector": "#first_name",
+                "min_length": 2,
+                "required": true,
+                "comment": "First name field with minimum length of 2 characters. Available options: type (css/xpath), selector, min_length, required"
+            },
+            "last_name": {
+                "type": "css",
+                "selector": "#last_name",
+                "min_length": 2,
+                "required": true,
+                "comment": "Last name field with minimum length of 2 characters. Available options: type (css/xpath), selector, min_length, required"
+            },
+            "email": {
+                "type": "css",
+                "selector": "#email",
+                "required": true,
+                "comment": "Email field that accepts any valid email format. Available options: type (css/xpath), selector, required"
+            },
+            "phone": {
+                "type": "css",
+                "selector": "#phone",
+                "required": true,
+                "comment": "Phone field that accepts Canadian phone numbers. Available options: type (css/xpath), selector, required"
+            },
+            "submit_button": {
+                "type": "css",
+                "selector": "button[type='submit']",
+                "required": true,
+                "comment": "Submit button to complete the form. Available options: type (css/xpath), selector, required"
+            }
+        },
+        "comment": "Example configuration for a Canadian form. Available top-level options: url, area_code_type (canadian/american), fields. Each field supports: type (css/xpath), selector, min_length (for text fields), required"
+    }
+} 
