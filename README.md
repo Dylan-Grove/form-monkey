@@ -77,6 +77,11 @@ The tool supports two operation modes:
 1. **Submit Mode** (`"mode": "submit"`): Automated form submission with random data
 2. **SQL Injection Mode** (`"mode": "sql_inject"`): Tests the form for SQL injection vulnerabilities
 
+You can specify the mode in three ways:
+- In the form configuration's `mode` parameter
+- Using the `--mode` or `-m` command-line option
+- Setting the `MODE` environment variable
+
 ### Phone Number Formats
 
 The tool supports various phone number formats based on the `area_code_type` configuration:
@@ -104,6 +109,20 @@ When using SQL Injection mode, you can customize the testing behavior:
 
 ## Usage
 
+### Command Line Arguments
+
+```bash
+python main.py [options]
+```
+
+Available options:
+- `--config` or `-c`: Specify the form configuration to use
+- `--mode` or `-m`: Operation mode (submit/sql_inject)
+- `--verbosity` or `-v`: Set logging verbosity (minimal/balanced/verbose)
+- `--min-interval`: Override minimum time between submissions
+- `--max-interval`: Override maximum time between submissions
+- `--url`: Override the URL from the configuration
+
 ### Running with Docker
 
 ```bash
@@ -111,27 +130,34 @@ When using SQL Injection mode, you can customize the testing behavior:
 docker build -t form-monkey .
 
 # Run in form submission mode
-docker run -it --rm -e FORM_CONFIG=example_form -e VERBOSITY=balanced form-monkey
+docker run -it --rm -e FORM_CONFIG=example_form -e MODE=submit form-monkey
 
 # Run in SQL injection mode
-docker run -it --rm -e FORM_CONFIG=sql_injection_example form-monkey
+docker run -it --rm -e FORM_CONFIG=example_form -e MODE=sql_inject form-monkey
+
+# Override the mode specified in the config file
+docker run -it --rm -e FORM_CONFIG=sql_injection_example -e MODE=submit form-monkey
 ```
-
-### Command Line Arguments
-
-- `--config` or `-c`: Specify the form configuration to use
-- `--verbosity` or `-v`: Set logging verbosity (minimal/balanced/verbose)
-- `--min-interval`: Override minimum time between submissions
-- `--max-interval`: Override maximum time between submissions
-- `--url`: Override the URL from the configuration
 
 ### Environment Variables
 
 - `FORM_CONFIG`: Form configuration to use
+- `MODE`: Operation mode (submit/sql_inject)
 - `VERBOSITY`: Logging verbosity level
 - `MIN_INTERVAL`: Minimum time between submissions
 - `MAX_INTERVAL`: Maximum time between submissions
 - `TARGET_URL`: Override the URL from the configuration
+
+## Project Structure
+
+The codebase is organized as follows:
+
+- `main.py`: Entry point that parses command-line arguments and handles configuration
+- `mode_submit.py`: Implementation of the form submission mode
+- `mode_sql_inject.py`: Implementation of the SQL injection testing mode
+- `utils.py`: Common utility functions used by both modes
+- `form_config.json`: Configuration for different forms and modes
+- `random_data.json`: Data for random generation of names, emails, etc.
 
 ## Best Practices for SQL Injection Prevention
 
