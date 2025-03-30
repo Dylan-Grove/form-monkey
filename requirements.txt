@@ -1,2 +1,3 @@
 selenium==4.18.1
-faker==22.6.0 
+faker==22.6.0
+undetected-chromedriver==3.5.5 

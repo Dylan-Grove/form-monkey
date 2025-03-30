@@ -4,31 +4,30 @@
         "area_code_type": "canadian",
         "fields": {
             "first_name": {
+                "selector": "input[name='first_name']",
                 "type": "css",
-                "selector": "#first_name",
-                "min_length": 2,
-                "required": true
+                "required": true,
+                "min_length": 2
             },
             "last_name": {
+                "selector": "input[name='last_name']",
                 "type": "css",
-                "selector": "#last_name",
-                "min_length": 2,
-                "required": true
+                "required": true,
+                "min_length": 2
             },
             "email": {
+                "selector": "input[name='email']",
                 "type": "css",
-                "selector": "#email",
                 "required": true
             },
             "phone": {
+                "selector": "input[name='phone']",
                 "type": "css",
-                "selector": "#phone",
                 "required": true
             },
             "submit_button": {
-                "type": "css",
                 "selector": "button[type='submit']",
-                "required": true
+                "type": "css"
             }
         }
     },
@@ -37,36 +36,30 @@
         "area_code_type": "canadian",
         "fields": {
             "first_name": {
+                "selector": "input[name='first_name']",
                 "type": "css",
-                "selector": "#first_name",
-                "min_length": 2,
                 "required": true,
-                "comment": "First name field with minimum length of 2 characters. Available options: type (css/xpath), selector, min_length, required"
+                "min_length": 2
             },
             "last_name": {
+                "selector": "input[name='last_name']",
                 "type": "css",
-                "selector": "#last_name",
-                "min_length": 2,
                 "required": true,
-                "comment": "Last name field with minimum length of 2 characters. Available options: type (css/xpath), selector, min_length, required"
+                "min_length": 2
             },
             "email": {
+                "selector": "input[name='email']",
                 "type": "css",
-                "selector": "#email",
-                "required": true,
-                "comment": "Email field that accepts any valid email format. Available options: type (css/xpath), selector, required"
+                "required": true
             },
             "phone": {
+                "selector": "input[name='phone']",
                 "type": "css",
-                "selector": "#phone",
-                "required": true,
-                "comment": "Phone field that accepts Canadian phone numbers. Available options: type (css/xpath), selector, required"
+                "required": true
             },
             "submit_button": {
-                "type": "css",
                 "selector": "button[type='submit']",
-                "required": true,
-                "comment": "Submit button to complete the form. Available options: type (css/xpath), selector, required"
+                "type": "css"
             }
         },
         "comment": "Example configuration for a Canadian form. Available top-level options: url, area_code_type (canadian/american), fields. Each field supports: type (css/xpath), selector, min_length (for text fields), required"

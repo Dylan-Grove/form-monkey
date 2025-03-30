@@ -11,6 +11,7 @@ import logging
 import os
 import json
 from datetime import datetime
+import undetected_chromedriver as uc
 
 # Configure logging
 logging.basicConfig(
@@ -254,15 +255,23 @@ def generate_email(first_name, last_name):
     return f"{username}@{domain}"
 
 def setup_driver():
-    logging.info("Setting up Chrome WebDriver...")
-    chrome_options = Options()
-    chrome_options.add_argument('--headless')
-    chrome_options.add_argument('--no-sandbox')
-    chrome_options.add_argument('--disable-dev-shm-usage')
-    chrome_options.add_argument('--window-size=1920,1080')
+    logging.info("Setting up undetected Chrome WebDriver...")
+    options = uc.ChromeOptions()
+    options.add_argument('--headless')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--window-size=1920,1080')
+    options.add_argument('--start-maximized')
+    options.add_argument('--disable-blink-features=AutomationControlled')
+    options.add_argument('--disable-extensions')
+    options.add_argument('--disable-popup-blocking')
+    options.add_argument('--disable-notifications')
+    options.add_argument('--disable-gpu')
+    options.add_argument('--ignore-certificate-errors')
+    options.add_argument('--ignore-ssl-errors')
     
-    service = Service('/usr/local/bin/chromedriver')
-    driver = webdriver.Chrome(service=service, options=chrome_options)
+    driver = uc.Chrome(options=options)
+    driver.set_page_load_timeout(30)  # Set page load timeout to 30 seconds
     logging.info("Chrome WebDriver setup complete")
     return driver
 
@@ -274,9 +283,119 @@ def submit_form():
         logging.info(f"Navigating to {URL}")
         driver.get(URL)
         
-        # Wait for the form to be present
-        wait = WebDriverWait(driver, 10)
-        logging.info("Waiting for form elements to be present...")
+        # Add a longer delay to let the page load completely
+        time.sleep(30)  # Increased initial wait time
+        
+        # Log the current URL and page title
+        logging.info(f"Current URL: {driver.current_url}")
+        logging.info(f"Page title: {driver.title}")
+        
+        # Wait for page to be fully loaded
+        wait = WebDriverWait(driver, 60)  # Increased timeout
+        wait.until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
+        
+        # Wait for any dynamic content to load
+        time.sleep(10)
+        
+        # Check for dynamic form loading
+        logging.info("Checking for dynamic form loading...")
+        try:
+            # Wait for any form elements to appear
+            wait.until(lambda driver: len(driver.find_elements(By.TAG_NAME, "form")) > 0 or
+                      len(driver.find_elements(By.TAG_NAME, "input")) > 0)
+        except:
+            logging.warning("No form elements found after waiting")
+        
+        # Log all input fields on the page
+        logging.info("Scanning for all input fields on the page...")
+        inputs = driver.find_elements(By.TAG_NAME, "input")
+        logging.info(f"Found {len(inputs)} input fields")
+        for i, input_field in enumerate(inputs):
+            try:
+                input_type = input_field.get_attribute('type')
+                input_name = input_field.get_attribute('name')
+                input_id = input_field.get_attribute('id')
+                input_class = input_field.get_attribute('class')
+                input_placeholder = input_field.get_attribute('placeholder')
+                logging.info(f"Input {i+1}: type={input_type}, name={input_name}, id={input_id}, class={input_class}, placeholder={input_placeholder}")
+            except:
+                pass
+        
+        # Check for and handle iframes
+        iframes = driver.find_elements(By.TAG_NAME, "iframe")
+        logging.info(f"Found {len(iframes)} iframes on the page")
+        
+        for i, iframe in enumerate(iframes):
+            try:
+                iframe_src = iframe.get_attribute('src')
+                logging.info(f"Iframe {i+1} src: {iframe_src}")
+                if 'captcha' in iframe_src.lower() or 'challenge' in iframe_src.lower():
+                    logging.warning(f"Found potential anti-bot iframe: {iframe_src}")
+            except:
+                pass
+        
+        # Check for shadow DOM elements
+        shadow_hosts = driver.execute_script("""
+            return Array.from(document.querySelectorAll('*')).filter(el => el.shadowRoot);
+        """)
+        if shadow_hosts:
+            logging.info(f"Found {len(shadow_hosts)} shadow DOM elements")
+            for host in shadow_hosts:
+                try:
+                    shadow_root = driver.execute_script("return arguments[0].shadowRoot", host)
+                    shadow_inputs = driver.execute_script("return arguments[0].querySelectorAll('input')", shadow_root)
+                    logging.info(f"Found {len(shadow_inputs)} inputs in shadow DOM")
+                    for input_field in shadow_inputs:
+                        try:
+                            input_type = driver.execute_script("return arguments[0].type", input_field)
+                            input_name = driver.execute_script("return arguments[0].name", input_field)
+                            input_id = driver.execute_script("return arguments[0].id", input_field)
+                            logging.info(f"Shadow DOM Input: type={input_type}, name={input_name}, id={input_id}")
+                        except:
+                            pass
+                except:
+                    pass
+        
+        # Check for common anti-bot elements
+        anti_bot_elements = [
+            "iframe[src*='captcha']",
+            "iframe[src*='recaptcha']",
+            "iframe[src*='challenge']",
+            "div[class*='captcha']",
+            "div[class*='challenge']",
+            "div[id*='captcha']",
+            "div[id*='challenge']",
+            "div[class*='cloudflare']",
+            "div[id*='cloudflare']"
+        ]
+        
+        for element in anti_bot_elements:
+            try:
+                if driver.find_elements(By.CSS_SELECTOR, element):
+                    logging.warning(f"Found potential anti-bot element: {element}")
+            except:
+                pass
+        
+        # Log the page source for debugging
+        logging.info("Current page source:")
+        logging.info(driver.page_source[:2000] + "...")  # Increased to 2000 chars
+        
+        # Check if we're on the correct page
+        if "crzyunbelevableofer" not in driver.current_url:
+            logging.error("URL changed unexpectedly. Current URL: " + driver.current_url)
+            return
+            
+        # Wait for any dynamic content to load
+        time.sleep(5)
+        
+        # First check if any form exists
+        try:
+            forms = driver.find_elements(By.TAG_NAME, "form")
+            logging.info(f"Found {len(forms)} forms on the page")
+            for i, form in enumerate(forms):
+                logging.info(f"Form {i+1} HTML: {form.get_attribute('outerHTML')[:500]}...")
+        except Exception as e:
+            logging.warning(f"Could not find forms: {str(e)}")
         
         # Generate random data - ensure first and last names are at least 2 characters
         first_name = fake.first_name()
@@ -293,21 +412,105 @@ def submit_form():
         # Generate email using common domains
         email = generate_email(first_name, last_name)
         
-        logging.info("Generated random data for form submission")
+        logging.info("Generated random data for form submission:")
+        logging.info(f"First Name: {first_name}")
+        logging.info(f"Last Name: {last_name}")
+        logging.info(f"Email: {email}")
+        logging.info(f"Phone: {phone}")
         
         # Fill in the form using configuration
         logging.info("Attempting to fill form fields...")
         
-        # First name field
-        first_name_input = wait.until(EC.presence_of_element_located((
-            By.XPATH if FORM_CONFIG_DATA['fields']['first_name']['type'] == 'xpath' else By.CSS_SELECTOR,
-            FORM_CONFIG_DATA['fields']['first_name']['selector']
-        )))
+        # First name field - try multiple methods to find it
+        logging.info(f"Looking for first name field with selector: {FORM_CONFIG_DATA['fields']['first_name']['selector']}")
+        first_name_input = None
+        
+        # Method 1: Try direct selector
+        try:
+            first_name_input = wait.until(EC.presence_of_element_located((
+                By.XPATH if FORM_CONFIG_DATA['fields']['first_name']['type'] == 'xpath' else By.CSS_SELECTOR,
+                FORM_CONFIG_DATA['fields']['first_name']['selector']
+            )))
+        except:
+            logging.info("First name field not found with direct selector")
+        
+        # Method 2: Try finding by name attribute
+        if not first_name_input:
+            try:
+                first_name_input = wait.until(EC.presence_of_element_located((
+                    By.CSS_SELECTOR,
+                    f"input[name*='first'][name*='name']"
+                )))
+            except:
+                logging.info("First name field not found by name attribute")
+        
+        # Method 3: Try finding by placeholder
+        if not first_name_input:
+            try:
+                first_name_input = wait.until(EC.presence_of_element_located((
+                    By.CSS_SELECTOR,
+                    f"input[placeholder*='first'][placeholder*='name']"
+                )))
+            except:
+                logging.info("First name field not found by placeholder")
+        
+        # Method 4: Try finding in iframes
+        if not first_name_input:
+            logging.info("First name field not found in main document, checking iframes...")
+            for iframe in iframes:
+                try:
+                    driver.switch_to.frame(iframe)
+                    first_name_input = wait.until(EC.presence_of_element_located((
+                        By.XPATH if FORM_CONFIG_DATA['fields']['first_name']['type'] == 'xpath' else By.CSS_SELECTOR,
+                        FORM_CONFIG_DATA['fields']['first_name']['selector']
+                    )))
+                    logging.info("Found first name field in iframe")
+                    break
+                except:
+                    driver.switch_to.default_content()
+                    continue
+        
+        # Method 5: Try finding in shadow DOM
+        if not first_name_input and shadow_hosts:
+            logging.info("First name field not found in main document or iframes, checking shadow DOM...")
+            for host in shadow_hosts:
+                try:
+                    shadow_root = driver.execute_script("return arguments[0].shadowRoot", host)
+                    first_name_input = driver.execute_script("""
+                        return arguments[0].querySelector(arguments[1])
+                    """, shadow_root, FORM_CONFIG_DATA['fields']['first_name']['selector'])
+                    if first_name_input:
+                        logging.info("Found first name field in shadow DOM")
+                        break
+                except:
+                    continue
+        
+        # Method 6: Try finding by JavaScript
+        if not first_name_input:
+            logging.info("First name field not found with previous methods, trying JavaScript...")
+            try:
+                first_name_input = driver.execute_script("""
+                    return document.querySelector(arguments[0]) ||
+                           document.querySelector('input[name*="first"][name*="name"]') ||
+                           document.querySelector('input[placeholder*="first"][placeholder*="name"]');
+                """, FORM_CONFIG_DATA['fields']['first_name']['selector'])
+                if first_name_input:
+                    logging.info("Found first name field using JavaScript")
+            except:
+                logging.info("First name field not found using JavaScript")
+        
+        if not first_name_input:
+            raise Exception("Could not find first name field using any method")
+        
+        # Fill the first name field
+        driver.execute_script("arguments[0].scrollIntoView(true);", first_name_input)
+        time.sleep(1)  # Wait for scroll to complete
         first_name_input.clear()
         first_name_input.send_keys(first_name)
         logging.info(f"Filled first name: {first_name}")
         
         # Last name field
+        logging.info(f"Looking for last name field with selector: {FORM_CONFIG_DATA['fields']['last_name']['selector']}")
         last_name_input = wait.until(EC.presence_of_element_located((
             By.XPATH if FORM_CONFIG_DATA['fields']['last_name']['type'] == 'xpath' else By.CSS_SELECTOR,
             FORM_CONFIG_DATA['fields']['last_name']['selector']
@@ -317,6 +520,7 @@ def submit_form():
         logging.info(f"Filled last name: {last_name}")
         
         # Email field
+        logging.info(f"Looking for email field with selector: {FORM_CONFIG_DATA['fields']['email']['selector']}")
         email_input = wait.until(EC.presence_of_element_located((
             By.XPATH if FORM_CONFIG_DATA['fields']['email']['type'] == 'xpath' else By.CSS_SELECTOR,
             FORM_CONFIG_DATA['fields']['email']['selector']
@@ -326,6 +530,7 @@ def submit_form():
         logging.info(f"Filled email: {email}")
         
         # Phone field
+        logging.info(f"Looking for phone field with selector: {FORM_CONFIG_DATA['fields']['phone']['selector']}")
         phone_input = wait.until(EC.presence_of_element_located((
             By.XPATH if FORM_CONFIG_DATA['fields']['phone']['type'] == 'xpath' else By.CSS_SELECTOR,
             FORM_CONFIG_DATA['fields']['phone']['selector']
@@ -335,15 +540,20 @@ def submit_form():
         logging.info(f"Filled phone: {phone}")
         
         # Click submit button
-        logging.info("Attempting to submit form...")
+        logging.info(f"Looking for submit button with selector: {FORM_CONFIG_DATA['fields']['submit_button']['selector']}")
         submit_button = wait.until(EC.element_to_be_clickable((
             By.XPATH if FORM_CONFIG_DATA['fields']['submit_button']['type'] == 'xpath' else By.CSS_SELECTOR,
             FORM_CONFIG_DATA['fields']['submit_button']['selector']
         )))
         submit_button.click()
+        logging.info("Clicked submit button")
         
         # Wait a moment to see if there's any response
-        time.sleep(2)
+        time.sleep(5)
+        
+        # Log the page source after submission for debugging
+        logging.info("Page source after submission:")
+        logging.info(driver.page_source[:500] + "...")  # Log first 500 chars
         
         # Check for error messages using the data-error-status attribute
         try:
@@ -351,18 +561,26 @@ def submit_form():
             if error_messages:
                 for error in error_messages:
                     logging.warning(f"Form validation error: {error.text}")
-        except:
-            logging.info("No error messages found - submission likely successful")
+            else:
+                logging.info("No validation errors found")
+        except Exception as e:
+            logging.info(f"Could not check for validation errors: {str(e)}")
         
         logging.info("Form submission completed")
-        logging.info("Form submission data:")
-        logging.info(f"  First Name: {first_name}")
-        logging.info(f"  Last Name: {last_name}")
-        logging.info(f"  Email: {email}")
-        logging.info(f"  Phone: {phone}")
         
     except Exception as e:
         logging.error(f"An error occurred during form submission: {str(e)}", exc_info=True)
+        # Log the current URL
+        try:
+            logging.error(f"Current URL: {driver.current_url}")
+        except:
+            logging.error("Could not get current URL")
+        # Log the page source
+        try:
+            logging.error("Current page source:")
+            logging.error(driver.page_source[:1000] + "...")  # Log first 1000 chars
+        except:
+            logging.error("Could not get page source")
     finally:
         logging.info("Closing WebDriver...")
         driver.quit()
