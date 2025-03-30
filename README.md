@@ -19,6 +19,7 @@ A Python-based tool for automated form submissions with support for various phon
 - Configurable submission intervals
 - Verbosity levels for logging
 - Docker support
+- SQL Injection testing for form security
 
 ## Configuration
 
@@ -32,8 +33,8 @@ The tool uses a JSON configuration file to define form fields and their properti
         "url": "https://example.com/form",
         "verbosity": "balanced",
         "timing": {
-            "min_interval": 180,
-            "max_interval": 1800
+            "min_interval": 300,
+            "max_interval": 2700
         },
         "fields": {
             "first_name": {
@@ -88,6 +89,44 @@ docker run -it --rm -e FORM_CONFIG=example_form -e VERBOSITY=balanced form-monke
 - `MIN_INTERVAL`: Minimum time between submissions
 - `MAX_INTERVAL`: Maximum time between submissions
 - `TARGET_URL`: Override the URL from the configuration
+
+## SQL Injection Testing
+
+Form Monkey includes a SQL injection testing tool to help ensure your forms are safe from SQL injection attacks.
+
+### Using the SQL Injection Tester
+
+```bash
+# Run SQL injection tests on a specific form configuration
+python sql_injection_tester.py --config example_form
+
+# Run with Docker
+docker run -it --rm -e FORM_CONFIG=example_form form-monkey python sql_injection_tester.py
+```
+
+### SQL Injection Test Features
+
+- Tests a wide range of SQL injection payloads
+- Supports MySQL, PostgreSQL, MSSQL, Oracle, and other databases
+- Tests for:
+  - Basic SQL injection vulnerabilities
+  - Error-based SQL injection
+  - Time-based SQL injection
+  - Stacked queries
+  - NoSQL injection
+  - XSS combined with SQL injection
+  - Unicode/encoding bypass techniques
+- Detailed vulnerability reports
+- Automated form filling and submission
+
+### Best Practices for SQL Injection Prevention
+
+- Use parameterized queries/prepared statements
+- Implement input validation and sanitization
+- Apply the principle of least privilege for database users
+- Use stored procedures for complex operations
+- Escape special characters in user input
+- Consider using an ORM (Object-Relational Mapping) library
 
 ## Requirements
 
