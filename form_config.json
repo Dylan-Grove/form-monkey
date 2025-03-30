@@ -1,7 +1,15 @@
 {
     "default": {
         "url": "https://example.com/form",
+<<<<<<< Updated upstream
         "area_code_type": "canadian",
+=======
+        "verbosity": "balanced",
+        "timing": {
+            "min_interval": 180,
+            "max_interval": 1800
+        },
+>>>>>>> Stashed changes
         "fields": {
             "first_name": {
                 "selector": "input[name='first_name']",
@@ -33,6 +41,14 @@
     },
     "example_canadian_form": {
         "url": "https://crzyunbelevableofer.club/cnt-frdscd/?oid=22&qze=3&hitid=9e8dc76f-77dc-445a-80b1-b5feda22964d&aff_sub=&saf=&cvu=&action=17at&aff_sub5=d8n6btsh5chjhfp837ugsme2&url_id=22&aff_sub2=&aff_sub3=&aff_sub4=17at&tracker=cg&language=&aff_sub6=&aff_sub7=&aff_sub8=&aff_sub9=&aff_sub10=&bzkbzk=gb",
+<<<<<<< Updated upstream
+=======
+        "verbosity": "balanced",
+        "timing": {
+            "min_interval": 180,
+            "max_interval": 1800
+        },
+>>>>>>> Stashed changes
         "area_code_type": "canadian",
         "fields": {
             "first_name": {

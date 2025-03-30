@@ -10,7 +10,7 @@ import random
 import logging
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 import undetected_chromedriver as uc
 
 # Configure logging
@@ -20,6 +20,7 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 
+<<<<<<< Updated upstream
 # Configuration
 MIN_INTERVAL = int(os.getenv('MIN_INTERVAL', 60))  # Default 1 minute
 MAX_INTERVAL = int(os.getenv('MAX_INTERVAL', 1800))  # Default 30 minutes
@@ -32,6 +33,30 @@ with open('form_config.json', 'r') as f:
 # Get the form configuration to use
 FORM_CONFIG_DATA = CONFIG.get(FORM_CONFIG, CONFIG['default'])
 URL = os.getenv('TARGET_URL', FORM_CONFIG_DATA['url'])
+=======
+# Load form configuration
+with open('form_config.json', 'r') as f:
+    CONFIG = json.load(f)
+
+# Get the form configuration to use
+FORM_CONFIG = os.getenv('FORM_CONFIG', 'default')
+FORM_CONFIG_DATA = CONFIG.get(FORM_CONFIG, CONFIG['default'])
+
+# Get timing configuration from config file
+timing_config = FORM_CONFIG_DATA.get('timing', {})
+MIN_INTERVAL = int(os.getenv('MIN_INTERVAL', timing_config.get('min_interval', 180)))  # Default 3 minutes
+MAX_INTERVAL = int(os.getenv('MAX_INTERVAL', timing_config.get('max_interval', 1800)))  # Default 30 minutes
+
+# Get URL from environment or config
+URL = os.getenv('TARGET_URL', FORM_CONFIG_DATA['url'])
+
+# Get verbosity from environment or config
+VERBOSITY = os.getenv('VERBOSITY', FORM_CONFIG_DATA.get('verbosity', 'balanced'))
+if VERBOSITY == 'minimal':
+    logging.getLogger().setLevel(logging.WARNING)
+elif VERBOSITY == 'verbose':
+    logging.getLogger().setLevel(logging.DEBUG)
+>>>>>>> Stashed changes
 
 # Common Canadian area codes
 CANADIAN_AREA_CODES = [
@@ -609,13 +634,25 @@ def main():
     
     while True:
         try:
+            # Calculate next interval (3-30 minutes)
+            next_interval = random.uniform(MIN_INTERVAL, MAX_INTERVAL)
+            minutes = next_interval / 60
+            next_submission_time = datetime.now() + timedelta(seconds=next_interval)
+            logging.info(f"Waiting {minutes:.1f} minutes before next submission")
+            logging.info(f"Next submission will be at: {next_submission_time.strftime('%Y-%m-%d %H:%M:%S')}")
+            logging.info(f"{'='*50}\n")
+            
+            # Wait for the calculated interval
+            time.sleep(next_interval)
+            
+            # After waiting, proceed with submission
             submission_count += 1
             logging.info(f"\n{'='*50}")
             logging.info(f"Starting submission #{submission_count}")
             logging.info(f"Current time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-            
             submit_form()
             
+<<<<<<< Updated upstream
             # Calculate next interval (1-30 minutes)
             next_interval = random.uniform(MIN_INTERVAL, MAX_INTERVAL)
             minutes = next_interval / 60
@@ -624,6 +661,8 @@ def main():
             
             time.sleep(next_interval)
             
+=======
+>>>>>>> Stashed changes
         except KeyboardInterrupt:
             logging.info("\nReceived keyboard interrupt. Shutting down...")
             break
