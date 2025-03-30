@@ -16,7 +16,6 @@ import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Form Monkey - A chaos engineering tool for automated form submissions')
-    parser.add_argument('--help', action='help', help='Show this help message and exit')
     parser.add_argument('--config', '-c', help='Form configuration to use (default: from FORM_CONFIG env var or "default")')
     parser.add_argument('--verbosity', '-v', choices=['minimal', 'balanced', 'verbose'], 
                        help='Logging verbosity level (default: from VERBOSITY env var or "balanced")')
@@ -279,8 +278,11 @@ def submit_form():
                 pass
         
         # Log the page source for debugging
-        logging.info("Current page source:")
-        logging.info(driver.page_source[:2000] + "...")  # Increased to 2000 chars
+        if VERBOSITY == 'verbose':
+            logging.info("Current page source:")
+            logging.info(driver.page_source[:2000] + "...")  # Increased to 2000 chars
+        else:
+            logging.info("Page source logging skipped (verbose mode only)")
         
         # Check if we're on the correct page
         if "crzyunbelevableofer" not in driver.current_url:
@@ -294,8 +296,9 @@ def submit_form():
         try:
             forms = driver.find_elements(By.TAG_NAME, "form")
             logging.info(f"Found {len(forms)} forms on the page")
-            for i, form in enumerate(forms):
-                logging.info(f"Form {i+1} HTML: {form.get_attribute('outerHTML')[:500]}...")
+            if VERBOSITY == 'verbose':
+                for i, form in enumerate(forms):
+                    logging.info(f"Form {i+1} HTML: {form.get_attribute('outerHTML')[:500]}...")
         except Exception as e:
             logging.warning(f"Could not find forms: {str(e)}")
         
@@ -454,8 +457,11 @@ def submit_form():
         time.sleep(5)
         
         # Log the page source after submission for debugging
-        logging.info("Page source after submission:")
-        logging.info(driver.page_source[:500] + "...")  # Log first 500 chars
+        if VERBOSITY == 'verbose':
+            logging.info("Page source after submission:")
+            logging.info(driver.page_source[:500] + "...")  # Log first 500 chars
+        else:
+            logging.info("Post-submission page source logging skipped (verbose mode only)")
         
         # Check for error messages using the data-error-status attribute
         try:
@@ -478,11 +484,12 @@ def submit_form():
         except:
             logging.error("Could not get current URL")
         # Log the page source
-        try:
-            logging.error("Current page source:")
-            logging.error(driver.page_source[:1000] + "...")  # Log first 1000 chars
-        except:
-            logging.error("Could not get page source")
+        if VERBOSITY == 'verbose':
+            try:
+                logging.error("Current page source:")
+                logging.error(driver.page_source[:1000] + "...")  # Log first 1000 chars
+            except:
+                logging.error("Could not get page source")
     finally:
         logging.info("Closing WebDriver...")
         driver.quit()
