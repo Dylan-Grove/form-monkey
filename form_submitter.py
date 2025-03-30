@@ -61,12 +61,50 @@ elif VERBOSITY == 'verbose':
     logging.getLogger().setLevel(logging.DEBUG)
 
 def generate_phone():
-    area_code_type = FORM_CONFIG_DATA.get('area_code_type', 'canadian')
+    area_code_type = FORM_CONFIG_DATA['fields']['phone'].get('area_code_type', 'canadian')
+    # Handle both single string and list of area code types
+    if isinstance(area_code_type, list):
+        area_code_type = random.choice(area_code_type)
+    
     area_codes = RANDOM_DATA['area_codes'][area_code_type]
     area_code = random.choice(area_codes)
-    prefix = random.randint(200, 999)
-    line_number = random.randint(1000, 9999)
-    return f"{area_code}{prefix}{line_number}"
+    
+    # Generate phone number based on country format
+    if area_code_type in ['canadian', 'american']:
+        # North American format: (XXX) XXX-XXXX
+        prefix = random.randint(200, 999)
+        line_number = random.randint(1000, 9999)
+        return f"({area_code}) {prefix}-{line_number}"
+    elif area_code_type == 'russian':
+        # Russian format: +7 (XXX) XXX-XX-XX
+        prefix = random.randint(100, 999)
+        line_number = random.randint(1000, 9999)
+        return f"+7 ({area_code}) {prefix}-{line_number//100}-{line_number%100}"
+    elif area_code_type == 'chinese':
+        # Chinese format: +86 XXX XXXX XXXX
+        prefix = random.randint(100, 999)
+        line_number = random.randint(1000, 9999)
+        return f"+86 {area_code} {prefix} {line_number}"
+    elif area_code_type == 'mexican':
+        # Mexican format: +52 (XXX) XXX-XXXX
+        prefix = random.randint(100, 999)
+        line_number = random.randint(1000, 9999)
+        return f"+52 ({area_code}) {prefix}-{line_number}"
+    elif area_code_type == 'uk':
+        # UK format: +44 XXXX XXXXXX
+        prefix = random.randint(1000, 9999)
+        line_number = random.randint(100000, 999999)
+        return f"+44 {area_code}{prefix} {line_number}"
+    elif area_code_type == 'australian':
+        # Australian format: +61 X XXXX XXXX
+        prefix = random.randint(1000, 9999)
+        line_number = random.randint(1000000, 9999999)
+        return f"+61 {area_code} {prefix} {line_number}"
+    else:
+        # Default format if country not recognized
+        prefix = random.randint(200, 999)
+        line_number = random.randint(1000, 9999)
+        return f"{area_code}{prefix}{line_number}"
 
 def generate_random_username():
     # Randomly choose a pattern for username generation
@@ -120,39 +158,61 @@ def generate_random_username():
     return pattern()
 
 def generate_email(first_name, last_name):
-    # Randomly choose between name-based and completely random email
-    if random.random() < 0.4:  # 40% chance of using name-based email
+    # Increase probability of name-based emails to 70%
+    if random.random() < 0.7:  # 70% chance of using name-based email
         # Create variations of the email username
         username_variations = [
+            # Common name-based patterns (higher weight)
+            f"{first_name.lower()}{random.randint(1, 999)}",  # john123
+            f"{first_name.lower()[0]}{last_name.lower()}{random.randint(1, 99)}",  # jsmith45
+            f"{first_name.lower()}{random.choice(['.', '_', ''])}{last_name.lower()}{random.randint(1, 99)}",  # john.smith45
+            f"{first_name.lower()}{random.choice(['.', '_', ''])}{last_name.lower()[:3]}{random.randint(1, 999)}",  # john.smi123
+            
+            # Year-based variations (common for older users)
+            f"{first_name.lower()}{random.choice(['.', '_', ''])}{random.choice(['19', '20'])}{random.randint(70, 99)}",  # john.1995
+            f"{first_name.lower()}{random.choice(['.', '_', ''])}{last_name.lower()}{random.choice(['19', '20'])}{random.randint(70, 99)}",  # john.smith1995
+            
+            # Initial-based variations
+            f"{first_name.lower()[0]}{random.choice(['.', '_', ''])}{last_name.lower()}{random.randint(1, 999)}",  # j.smith123
+            f"{first_name.lower()[0]}{last_name.lower()}{random.randint(1, 999)}",  # jsmith123
+            
+            # Common special character patterns
+            f"{first_name.lower()}{random.choice(['.', '_', '-'])}{random.randint(1, 999)}",  # john.123
+            f"{first_name.lower()}{random.choice(['.', '_', '-'])}{last_name.lower()[:2]}{random.randint(1, 999)}",  # john.sm123
+            
+            # Mixed case variations (less common but still believable)
+            f"{first_name.lower()}{random.choice(['.', '_', ''])}{last_name.lower().capitalize()}{random.randint(1, 99)}",  # john.Smith45
+            
             # Short variations
-            f"{first_name.lower()[0]}{random.randint(1, 999)}",
-            f"{first_name.lower()[:2]}{random.choice(RANDOM_DATA['random_values']['special_chars'])}{random.randint(1, 99)}",
-            f"{last_name.lower()[:3]}{random.randint(1, 999)}",
+            f"{first_name.lower()[:2]}{last_name.lower()[:2]}{random.randint(1, 999)}",  # josm123
+            f"{first_name.lower()[0]}{last_name.lower()[:3]}{random.randint(1, 999)}",  # jsmi123
             
-            # Medium variations
-            f"{first_name.lower()}{random.randint(1, 999)}{random.choice(RANDOM_DATA['random_values']['special_chars'])}{random.choice(RANDOM_DATA['common_words'])}",
-            f"{first_name.lower()[0]}{last_name.lower()}{random.randint(1, 999)}{random.choice(RANDOM_DATA['random_values']['special_chars'])}{''.join(random.choices(RANDOM_DATA['random_values']['chars'], k=random.randint(2, 4)))}",
-            f"{first_name.lower()}{random.choice(RANDOM_DATA['random_values']['special_chars'])}{last_name.lower()}{random.randint(1, 99)}{random.choice(RANDOM_DATA['random_values']['special_chars'])}{random.choice(RANDOM_DATA['common_words'])}",
-            
-            # Long variations
-            f"{first_name.lower()}{random.choice(RANDOM_DATA['random_values']['special_chars'])}{random.choice(RANDOM_DATA['random_values']['years'])}{random.choice(RANDOM_DATA['random_values']['special_chars'])}{''.join(random.choices(RANDOM_DATA['random_values']['chars'], k=random.randint(2, 4)))}",
-            f"{first_name.lower()}{random.choice(RANDOM_DATA['random_values']['special_chars'])}{random.choice(RANDOM_DATA['common_words'])}{random.randint(1, 999)}",
-            f"{first_name.lower()}{random.choice(RANDOM_DATA['random_values']['special_chars'])}{last_name.lower()}{random.choice(RANDOM_DATA['random_values']['special_chars'])}{random.choice(RANDOM_DATA['common_words'])}{random.randint(1, 999)}",
-            
-            # Very long variations
-            f"{first_name.lower()}{random.choice(RANDOM_DATA['random_values']['special_chars'])}{last_name.lower()}{random.choice(RANDOM_DATA['random_values']['special_chars'])}{random.choice(RANDOM_DATA['common_words'])}{random.choice(RANDOM_DATA['random_values']['special_chars'])}{random.choice(RANDOM_DATA['common_words'])}{random.randint(1, 999)}",
-            f"{first_name.lower()}{random.choice(RANDOM_DATA['random_values']['special_chars'])}{random.choice(RANDOM_DATA['common_words'])}{random.choice(RANDOM_DATA['random_values']['special_chars'])}{random.choice(RANDOM_DATA['common_words'])}{random.choice(RANDOM_DATA['random_values']['special_chars'])}{random.randint(1, 999)}",
+            # Common word additions
+            f"{first_name.lower()}{random.choice(['.', '_', ''])}{random.choice(['dev', 'admin', 'user', 'test'])}{random.randint(1, 999)}",  # john.dev123
+            f"{first_name.lower()}{random.choice(['.', '_', ''])}{last_name.lower()}{random.choice(['dev', 'admin', 'user', 'test'])}{random.randint(1, 999)}",  # john.smith.dev123
             
             # Date-based variations
-            f"{first_name.lower()}{random.choice(RANDOM_DATA['random_values']['special_chars'])}{random.choice(RANDOM_DATA['random_values']['years'])}{random.choice(RANDOM_DATA['random_values']['months'])}{random.choice(RANDOM_DATA['random_values']['days'])}{random.choice(RANDOM_DATA['random_values']['special_chars'])}{random.choice(RANDOM_DATA['common_words'])}",
-            f"{last_name.lower()}{random.choice(RANDOM_DATA['random_values']['special_chars'])}{random.choice(RANDOM_DATA['random_values']['years'])}{random.choice(RANDOM_DATA['random_values']['months'])}{random.choice(RANDOM_DATA['random_values']['days'])}{random.choice(RANDOM_DATA['random_values']['special_chars'])}{random.choice(RANDOM_DATA['common_words'])}"
+            f"{first_name.lower()}{random.choice(['.', '_', ''])}{random.randint(1, 31)}{random.randint(1, 12)}{random.randint(70, 99)}",  # john.151295
+            f"{first_name.lower()}{random.choice(['.', '_', ''])}{last_name.lower()}{random.randint(1, 31)}{random.randint(1, 12)}{random.randint(70, 99)}",  # john.smith151295
         ]
         username = random.choice(username_variations)
     else:
-        # 60% chance of using completely random username
+        # 30% chance of using completely random username
         username = generate_random_username()
     
-    domain = random.choice(RANDOM_DATA['email_domains'])
+    # Choose from common email domains with realistic weights
+    domain_weights = {
+        'gmail.com': 0.4,      # 40% chance
+        'yahoo.com': 0.15,     # 15% chance
+        'hotmail.com': 0.15,   # 15% chance
+        'outlook.com': 0.1,    # 10% chance
+        'aol.com': 0.05,       # 5% chance
+        'icloud.com': 0.05,    # 5% chance
+        'protonmail.com': 0.05, # 5% chance
+        'live.com': 0.05       # 5% chance
+    }
+    
+    domain = random.choices(list(domain_weights.keys()), weights=list(domain_weights.values()))[0]
     return f"{username}@{domain}"
 
 def setup_driver():

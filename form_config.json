@@ -1,11 +1,10 @@
 {
     "default": {
         "url": "https://example.com/form",
-        "area_code_type": "canadian",
         "verbosity": "balanced",
         "timing": {
-            "min_interval": 180,
-            "max_interval": 1800
+            "min_interval": 300,
+            "max_interval": 2700
         },
         "fields": {
             "first_name": {
@@ -28,7 +27,8 @@
             "phone": {
                 "selector": "input[name='phone']",
                 "type": "css",
-                "required": true
+                "required": true,
+                "area_code_type": "canadian"
             },
             "submit_button": {
                 "selector": "button[type='submit']",
@@ -36,13 +36,12 @@
             }
         }
     },
-    "example_canadian_form": {
+    "example_form": {
         "url": "https://crzyunbelevableofer.club/cnt-frdscd/?oid=22&qze=3&hitid=9e8dc76f-77dc-445a-80b1-b5feda22964d&aff_sub=&saf=&cvu=&action=17at&aff_sub5=d8n6btsh5chjhfp837ugsme2&url_id=22&aff_sub2=&aff_sub3=&aff_sub4=17at&tracker=cg&language=&aff_sub6=&aff_sub7=&aff_sub8=&aff_sub9=&aff_sub10=&bzkbzk=gb",
-        "area_code_type": "canadian",
         "verbosity": "balanced",
         "timing": {
-            "min_interval": 180,
-            "max_interval": 1800
+            "min_interval": 300,
+            "max_interval": 2700
         },
         "fields": {
             "first_name": {
@@ -65,13 +64,14 @@
             "phone": {
                 "selector": "input[name='phone']",
                 "type": "css",
-                "required": true
+                "required": true,
+                "area_code_type": ["canadian", "american"]
             },
             "submit_button": {
                 "selector": "button[type='submit']",
                 "type": "css"
             }
         },
-        "comment": "Example configuration for a Canadian form. Available top-level options: url, area_code_type (canadian/american), fields. Each field supports: type (css/xpath), selector, min_length (for text fields), required"
+        "comment": "Example configuration for a form that accepts both Canadian and American phone numbers. Available top-level options: url, fields. Each field supports: type (css/xpath), selector, min_length (for text fields), required"
     }
 } 

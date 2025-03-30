@@ -1,56 +1,31 @@
-# Form Monkey 🐒
+# Form Monkey - Automated Form Submission Tool
 
-A chaos engineering tool for automated form submissions with configurable delays and randomization.
+A Python-based tool for automated form submissions with support for various phone number formats and anti-bot detection.
 
 ## Features
 
-- Configurable form submission intervals (3-30 minutes)
-- Random data generation for form fields
-- Support for multiple form configurations
-- Verbosity levels (minimal, balanced, verbose)
-- Anti-bot detection bypass
-- Detailed logging and debugging
+- Automated form submission with random delays
+- Support for multiple phone number formats:
+  - Canadian (e.g., (416) 555-1234)
+  - American (e.g., (212) 555-1234)
+  - Russian (e.g., +7 (495) 123-45-67)
+  - Chinese (e.g., +86 10 1234 5678)
+  - Mexican (e.g., +52 (55) 1234-5678)
+  - UK (e.g., +44 20 7123 4567)
+  - Australian (e.g., +61 2 1234 5678)
+- Anti-bot detection evasion
+- Configurable submission intervals
+- Verbosity levels for logging
+- Docker support
 
-## Requirements
+## Configuration
 
-- Python 3.9+
-- Docker (for containerized execution)
-- Chrome/Chromium browser (for form submission)
+### Form Configuration (form_config.json)
 
-## Installation
+The tool uses a JSON configuration file to define form fields and their properties:
 
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/form-monkey.git
-cd form-monkey
-```
-
-2. Build the Docker image:
-```bash
-docker build -t form-monkey .
-```
-
-## Usage
-
-### Basic Usage
-
-Run the form submitter with default configuration:
-```bash
-docker run -it --rm form-monkey
-```
-
-### Configuration
-
-1. Create a form configuration in `form_config.json`:
 ```json
 {
-    "default": {
-        "verbosity": "balanced",
-        "timing": {
-            "min_interval": 180,
-            "max_interval": 1800
-        }
-    },
     "example_form": {
         "url": "https://example.com/form",
         "verbosity": "balanced",
@@ -60,79 +35,64 @@ docker run -it --rm form-monkey
         },
         "fields": {
             "first_name": {
-                "selector": "#first_name",
-                "type": "text",
+                "selector": "input[name='first_name']",
+                "type": "css",
                 "required": true,
-                "validation": {
-                    "min_length": 2,
-                    "max_length": 50
-                }
-            },
-            "last_name": {
-                "selector": "#last_name",
-                "type": "text",
-                "required": true,
-                "validation": {
-                    "min_length": 2,
-                    "max_length": 50
-                }
-            },
-            "email": {
-                "selector": "#email",
-                "type": "email",
-                "required": true,
-                "validation": {
-                    "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
-                }
+                "min_length": 2
             },
             "phone": {
-                "selector": "#phone",
-                "type": "tel",
+                "selector": "input[name='phone']",
+                "type": "css",
                 "required": true,
-                "validation": {
-                    "pattern": "^\\d{10}$"
-                }
+                "area_code_type": ["canadian", "american"]  // Can be a single string or array of types
             }
         }
     }
 }
 ```
 
-2. Run with specific configuration:
+### Phone Number Formats
+
+The tool supports various phone number formats based on the `area_code_type` configuration:
+
+- Single type: `"area_code_type": "canadian"`
+- Multiple types: `"area_code_type": ["canadian", "american"]`
+
+When multiple types are specified, the tool will randomly choose one type for each submission.
+
+## Usage
+
+### Running with Docker
+
 ```bash
-docker run -it --rm -e FORM_CONFIG=example_form form-monkey
+# Build the Docker image
+docker build -t form-monkey .
+
+# Run with specific configuration
+docker run -it --rm -e FORM_CONFIG=example_form -e VERBOSITY=balanced form-monkey
 ```
+
+### Command Line Arguments
+
+- `--config` or `-c`: Specify the form configuration to use
+- `--verbosity` or `-v`: Set logging verbosity (minimal/balanced/verbose)
+- `--min-interval`: Override minimum time between submissions
+- `--max-interval`: Override maximum time between submissions
 
 ### Environment Variables
 
-- `FORM_CONFIG`: Name of the form configuration to use (default: "default")
-- `VERBOSITY`: Logging verbosity level (minimal, balanced, verbose)
-- `MIN_INTERVAL`: Minimum time between submissions in seconds (overrides config)
-- `MAX_INTERVAL`: Maximum time between submissions in seconds (overrides config)
+- `FORM_CONFIG`: Form configuration to use
+- `VERBOSITY`: Logging verbosity level
+- `MIN_INTERVAL`: Minimum time between submissions
+- `MAX_INTERVAL`: Maximum time between submissions
+- `TARGET_URL`: Override the URL from the configuration
 
-### Help
+## Requirements
 
-Run with --help to see all available options:
-```bash
-docker run -it --rm form-monkey --help
-```
-
-## Development
-
-### Adding New Form Configurations
-
-1. Add a new configuration section to `form_config.json`
-2. Define form fields with their selectors and validation rules
-3. Run with the new configuration name
-
-### Customizing Data Generation
-
-The tool uses the Faker library for generating random data. You can customize the data generation by modifying the lists of:
-- Common words
-- Email domains
-- Area codes
-- Special characters
+- Python 3.9+
+- Chrome/Chromium browser
+- Docker (optional)
 
 ## License
 
-MIT License - see LICENSE file for details
+MIT License
