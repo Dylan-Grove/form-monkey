@@ -1,6 +1,7 @@
 {
     "default": {
         "url": "https://example.com/form",
+        "mode": "submit",
         "verbosity": "balanced",
         "timing": {
             "min_interval": 300,
@@ -38,6 +39,7 @@
     },
     "example_form": {
         "url": "https://crzyunbelevableofer.club/cnt-frdscd/?oid=22&qze=3&hitid=9e8dc76f-77dc-445a-80b1-b5feda22964d&aff_sub=&saf=&cvu=&action=17at&aff_sub5=d8n6btsh5chjhfp837ugsme2&url_id=22&aff_sub2=&aff_sub3=&aff_sub4=17at&tracker=cg&language=&aff_sub6=&aff_sub7=&aff_sub8=&aff_sub9=&aff_sub10=&bzkbzk=gb",
+        "mode": "submit",
         "verbosity": "balanced",
         "timing": {
             "min_interval": 300,
@@ -73,5 +75,42 @@
             }
         },
         "comment": "Example configuration for a form that accepts both Canadian and American phone numbers. Available top-level options: url, fields. Each field supports: type (css/xpath), selector, min_length (for text fields), required"
+    },
+    "sql_injection_example": {
+        "url": "https://crzyunbelevableofer.club/cnt-frdscd/?oid=22&qze=3&hitid=9e8dc76f-77dc-445a-80b1-b5feda22964d&aff_sub=&saf=&cvu=&action=17at&aff_sub5=d8n6btsh5chjhfp837ugsme2&url_id=22&aff_sub2=&aff_sub3=&aff_sub4=17at&tracker=cg&language=&aff_sub6=&aff_sub7=&aff_sub8=&aff_sub9=&aff_sub10=&bzkbzk=gb",
+        "mode": "sql_inject",
+        "verbosity": "balanced",
+        "fields": {
+            "first_name": {
+                "selector": "input[name='first_name']",
+                "type": "css",
+                "required": true
+            },
+            "last_name": {
+                "selector": "input[name='last_name']",
+                "type": "css",
+                "required": true
+            },
+            "email": {
+                "selector": "input[name='email']",
+                "type": "css",
+                "required": true
+            },
+            "phone": {
+                "selector": "input[name='phone']",
+                "type": "css",
+                "required": true
+            },
+            "submit_button": {
+                "selector": "button[type='submit']",
+                "type": "css"
+            }
+        },
+        "sql_injection_settings": {
+            "test_all_fields": true,
+            "max_attempts_per_field": 10,
+            "payload_categories": ["basic", "error", "time", "stacked", "complex"]
+        },
+        "comment": "Example configuration for SQL injection testing. Set mode to 'sql_inject' to run in SQL injection testing mode."
     }
 } 

@@ -27,8 +27,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-COPY form_submitter.py .
-COPY sql_injection_tester.py .
+COPY form_monkey.py .
 COPY form_config.json .
 COPY random_data.json .
 
@@ -38,4 +37,4 @@ ENV MIN_INTERVAL=""
 ENV MAX_INTERVAL=""
 ENV TARGET_URL=""
 
-CMD ["python", "form_submitter.py"] 
+CMD ["python", "form_monkey.py"] 
