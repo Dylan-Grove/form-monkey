@@ -27,9 +27,9 @@ docker build -t form-submitter .
 docker run -it form-submitter
 ```
 
-3. Run with custom intervals (example: 30-120 seconds):
+3. Run with custom settings (example: 30-120 seconds between submissions):
 ```bash
-docker run -it -e MIN_INTERVAL=30 -e MAX_INTERVAL=120 form-submitter
+docker run -it -e MIN_INTERVAL=30 -e MAX_INTERVAL=120 -e TARGET_URL=https://crzyunbelevableofer.club/ form-submitter
 ```
 
 The script will continuously submit the form with random data, with a random delay between the configured min and max intervals. Each submission will be logged with detailed information including:
