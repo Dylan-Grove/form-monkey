@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y \
     wget \
     gnupg \
     unzip \
+    curl \
     fonts-liberation \
     libasound2 \
     libatk-bridge2.0-0 \
@@ -31,12 +32,12 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
     && rm -rf /var/lib/apt/lists/*
 
 # Install chromedriver
-RUN CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d. -f1) \
-    && CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION") \
-    && wget -q "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip" \
-    && unzip chromedriver_linux64.zip -d /usr/local/bin \
+RUN wget -q "https://storage.googleapis.com/chrome-for-testing-public/114.0.5735.90/linux64/chromedriver-linux64.zip" \
+    && unzip chromedriver-linux64.zip -d /usr/local/bin \
+    && mv /usr/local/bin/chromedriver-linux64/chromedriver /usr/local/bin/ \
     && chmod +x /usr/local/bin/chromedriver \
-    && rm chromedriver_linux64.zip
+    && rm -rf /usr/local/bin/chromedriver-linux64 \
+    && rm chromedriver-linux64.zip
 
 # Set working directory
 WORKDIR /app
@@ -60,7 +61,7 @@ ENV PYTHONPATH=/app
 RUN mkdir -p logs reports
 
 # Set entrypoint
-ENTRYPOINT ["python", "src/main.py"]
+ENTRYPOINT ["python", "main.py"]
 
 # Default command
 CMD ["--mode", "submit"] 
