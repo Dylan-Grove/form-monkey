@@ -10,6 +10,10 @@ from typing import Dict, Any, Optional
 # Import mode handlers
 from mode_submit import run_submit_mode
 from mode_sql_inject import run_sql_injection_mode
+from mode_xss import run_xss_mode
+from mode_csrf import run_csrf_mode
+from mode_headers import run_headers_mode
+from mode_comprehensive import run_comprehensive_mode
 import utils
 
 # Configure logging
@@ -28,7 +32,9 @@ RANDOM_DATA = None
 VERBOSITY = "balanced"
 
 # Default configuration file path
-CONFIG_FILE_PATH = "form_config.json"
+CONFIG_FILE_PATH = "config.json"
+# Try to get alternative config file path from environment
+CONFIG_FILE_PATH = os.environ.get("CONFIG", CONFIG_FILE_PATH)
 
 def parse_arguments() -> argparse.Namespace:
     """Parse command line arguments."""
@@ -40,8 +46,8 @@ def parse_arguments() -> argparse.Namespace:
     )
     parser.add_argument(
         "--mode", "-m",
-        choices=["submit", "sql_inject"],
-        help="Operation mode (submit or sql_inject)"
+        choices=["submit", "sql_inject", "xss", "csrf", "headers", "comprehensive"],
+        help="Operation mode (submit, sql_inject, xss, csrf, headers, or comprehensive)"
     )
     parser.add_argument(
         "--verbosity", "-v",
@@ -62,12 +68,27 @@ def parse_arguments() -> argparse.Namespace:
         "--url",
         help="Override the URL from the configuration"
     )
+    parser.add_argument(
+        "--report-format",
+        choices=["html", "json", "both"],
+        help="Report format for security tests (html, json, or both)"
+    )
+    parser.add_argument(
+        "--report-dir",
+        help="Directory to save security reports"
+    )
+    parser.add_argument(
+        "--test",
+        action="append",
+        choices=["sql", "xss", "csrf", "headers"],
+        help="Security tests to run in comprehensive mode (can be specified multiple times)"
+    )
     
     return parser.parse_args()
 
 def load_config(config_name: Optional[str] = None) -> Dict[str, Any]:
     """
-    Load configuration from form_config.json.
+    Load configuration from config.json.
     
     Args:
         config_name: Name of the configuration to load. If None, use environment
@@ -78,7 +99,11 @@ def load_config(config_name: Optional[str] = None) -> Dict[str, Any]:
     """
     # Try to get config name from environment if not provided as argument
     if not config_name:
-        config_name = os.environ.get("FORM_CONFIG", "default")
+        config_name = os.environ.get("FORM", "default")
+    
+    # Get absolute path to the config file for better logging
+    abs_config_path = os.path.abspath(CONFIG_FILE_PATH)
+    logger.info(f"Loading configuration '{config_name}' from file: {abs_config_path}")
     
     try:
         with open(CONFIG_FILE_PATH, "r") as f:
@@ -109,14 +134,14 @@ def get_operation_mode(args: argparse.Namespace, config: Dict[str, Any]) -> str:
         config: Configuration dictionary
     
     Returns:
-        Operation mode string ("submit" or "sql_inject")
+        Operation mode string
     """
     # Priority: CLI args > Environment variable > Config file > Default
     if args.mode:
         return args.mode
     
     env_mode = os.environ.get("MODE")
-    if env_mode in ["submit", "sql_inject"]:
+    if env_mode in ["submit", "sql_inject", "xss", "csrf", "headers", "comprehensive"]:
         return env_mode
     
     return config.get("mode", "submit")
@@ -195,6 +220,28 @@ def apply_command_line_overrides(args: argparse.Namespace, config: Dict[str, Any
         except ValueError:
             logger.warning("Invalid MAX_INTERVAL environment variable, using default")
     
+    # Override security testing settings if provided
+    if args.report_format or args.report_dir or args.test:
+        if "comprehensive_settings" not in config:
+            config["comprehensive_settings"] = {}
+        
+        if args.report_format:
+            config["comprehensive_settings"]["report_format"] = args.report_format
+        elif os.environ.get("REPORT_FORMAT"):
+            config["comprehensive_settings"]["report_format"] = os.environ.get("REPORT_FORMAT")
+        
+        if args.report_dir:
+            config["comprehensive_settings"]["report_dir"] = args.report_dir
+        elif os.environ.get("REPORT_DIR"):
+            config["comprehensive_settings"]["report_dir"] = os.environ.get("REPORT_DIR")
+        
+        if args.test:
+            config["comprehensive_settings"]["tests"] = args.test
+        elif os.environ.get("SECURITY_TESTS"):
+            tests = os.environ.get("SECURITY_TESTS", "").split(",")
+            if all(test in ["sql", "xss", "csrf", "headers"] for test in tests):
+                config["comprehensive_settings"]["tests"] = tests
+    
     return config
 
 def main() -> None:
@@ -228,6 +275,14 @@ def main() -> None:
         run_submit_mode(context)
     elif mode == "sql_inject":
         run_sql_injection_mode(context)
+    elif mode == "xss":
+        run_xss_mode(context)
+    elif mode == "csrf":
+        run_csrf_mode(context)
+    elif mode == "headers":
+        run_headers_mode(context)
+    elif mode == "comprehensive":
+        run_comprehensive_mode(context)
     else:
         logger.error(f"Unknown mode: {mode}")
         sys.exit(1)

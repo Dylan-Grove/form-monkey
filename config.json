@@ -1,0 +1,177 @@
+{
+    "default": {
+        "verbosity": "verbose",
+        "timing": {
+            "min_interval": 300,
+            "max_interval": 2700
+        }
+    },
+    "example_submit": {
+        "name": "example_submit",
+        "url": "https://crzyunbelevableofer.club/cnt-frdscd/?oid=22&qze=3&hitid=9e8dc76f-77dc-445a-80b1-b5feda22964d&aff_sub=&saf=&cvu=&action=17at&aff_sub5=d8n6btsh5chjhfp837ugsme2&url_id=22&aff_sub2=&aff_sub3=&aff_sub4=17at&tracker=cg&language=&aff_sub6=&aff_sub7=&aff_sub8=&aff_sub9=&aff_sub10=&bzkbzk=gb",
+        "mode": "submit",
+        "fields": {
+            "first_name": {
+                "id": "firstname",
+                "name": "first_name",
+                "type": "text",
+                "required": true
+            },
+            "last_name": {
+                "id": "lastname",
+                "name": "last_name",
+                "type": "text",
+                "required": true
+            },
+            "email": {
+                "id": "email",
+                "name": "email",
+                "type": "email",
+                "required": true
+            },
+            "phone": {
+                "id": "phone",
+                "name": "phone",
+                "type": "tel",
+                "required": true,
+                "area_code_type": "canadian"
+            }
+        },
+        "submit_button": {
+            "id": "submit_btn",
+            "name": "submit",
+            "selector": "button.submit-button"
+        }
+    },
+    "example_sql_inject": {
+        "url": "https://crzyunbelevableofer.club/cnt-frdscd/?oid=22&qze=3&hitid=9e8dc76f-77dc-445a-80b1-b5feda22964d&aff_sub=&saf=&cvu=&action=17at&aff_sub5=d8n6btsh5chjhfp837ugsme2&url_id=22&aff_sub2=&aff_sub3=&aff_sub4=17at&tracker=cg&language=&aff_sub6=&aff_sub7=&aff_sub8=&aff_sub9=&aff_sub10=&bzkbzk=gb",
+        "mode": "sql_inject",
+        "verbosity": "balanced",
+        "fields": {
+            "username": {
+                "selector": "input[name='first_name']",
+                "type": "css",
+                "required": true
+            },
+            "password": {
+                "selector": "input[name='email']",
+                "type": "css",
+                "required": true
+            },
+            "submit_button": {
+                "selector": "button[type='submit']",
+                "type": "css"
+            }
+        },
+        "sql_injection_settings": {
+            "test_all_fields": false,
+            "max_attempts_per_field": 5,
+            "payload_categories": ["basic", "error"],
+            "comment": "Quick SQL injection test focusing on basic and error-based payloads only"
+        }
+    },
+    "example_comprehensive_test": {
+        "name": "Comprehensive Security Test",
+        "url": "https://crzyunbelevableofer.club/cnt-frdscd/?oid=22&qze=3&hitid=9e8dc76f-77dc-445a-80b1-b5feda22964d&aff_sub=&saf=&cvu=&action=17at&aff_sub5=d8n6btsh5chjhfp837ugsme2&url_id=22&aff_sub2=&aff_sub3=&aff_sub4=17at&tracker=cg&language=&aff_sub6=&aff_sub7=&aff_sub8=&aff_sub9=&aff_sub10=&bzkbzk=gb",
+        "mode": "comprehensive",
+        "verbosity": "verbose",
+        "fields": {
+            "first_name": {
+                "id": "first_name",
+                "name": "fname",
+                "type": "text",
+                "required": true
+            },
+            "last_name": {
+                "id": "last_name",
+                "name": "lname",
+                "type": "text",
+                "required": true
+            },
+            "email": {
+                "id": "email",
+                "name": "email",
+                "type": "email",
+                "required": true
+            },
+            "phone": {
+                "id": "phone",
+                "name": "phone",
+                "type": "tel",
+                "area_code_type": "canadian",
+                "required": true
+            },
+            "message": {
+                "id": "message",
+                "name": "message",
+                "type": "textarea",
+                "required": false
+            }
+        },
+        "submit_button": {
+            "id": "submit",
+            "name": "submit",
+            "selector": "button[type='submit']"
+        },
+        "comprehensive_settings": {
+            "tests": ["sql", "xss", "csrf", "headers"],
+            "report_format": "both",
+            "report_dir": "security_reports"
+        },
+        "sql_injection_settings": {
+            "payload_types": ["basic", "error", "stacked"],
+            "max_tests_per_field": 3
+        },
+        "xss_settings": {
+            "payload_types": ["basic", "attribute", "encoded"],
+            "max_tests_per_field": 3
+        }
+    },
+    "example_xss_test": {
+        "name": "XSS Test",
+        "url": "https://crzyunbelevableofer.club/cnt-frdscd/?oid=22&qze=3&hitid=9e8dc76f-77dc-445a-80b1-b5feda22964d&aff_sub=&saf=&cvu=&action=17at&aff_sub5=d8n6btsh5chjhfp837ugsme2&url_id=22&aff_sub2=&aff_sub3=&aff_sub4=17at&tracker=cg&language=&aff_sub6=&aff_sub7=&aff_sub8=&aff_sub9=&aff_sub10=&bzkbzk=gb",
+        "mode": "xss",
+        "verbosity": "verbose",
+        "fields": {
+            "name": {
+                "id": "name",
+                "name": "name",
+                "type": "text",
+                "required": true
+            },
+            "email": {
+                "id": "email",
+                "name": "email",
+                "type": "email",
+                "required": true
+            },
+            "comment": {
+                "id": "comment",
+                "name": "comment",
+                "type": "textarea",
+                "required": true
+            }
+        },
+        "submit_button": {
+            "id": "post_comment",
+            "name": "submit",
+            "selector": "button[type='submit']"
+        },
+        "xss_settings": {
+            "payload_types": ["basic", "attribute", "encoded", "dom", "evasion"],
+            "max_tests_per_field": 5
+        }
+    },
+    "example_csrf_test": {
+        "name": "CSRF Test",
+        "url": "https://crzyunbelevableofer.club/cnt-frdscd/?oid=22&qze=3&hitid=9e8dc76f-77dc-445a-80b1-b5feda22964d&aff_sub=&saf=&cvu=&action=17at&aff_sub5=d8n6btsh5chjhfp837ugsme2&url_id=22&aff_sub2=&aff_sub3=&aff_sub4=17at&tracker=cg&language=&aff_sub6=&aff_sub7=&aff_sub8=&aff_sub9=&aff_sub10=&bzkbzk=gb",
+        "mode": "csrf",
+        "verbosity": "verbose"
+    },
+    "example_headers_test": {
+        "name": "Security Headers Test",
+        "url": "https://crzyunbelevableofer.club/cnt-frdscd/?oid=22&qze=3&hitid=9e8dc76f-77dc-445a-80b1-b5feda22964d&aff_sub=&saf=&cvu=&action=17at&aff_sub5=d8n6btsh5chjhfp837ugsme2&url_id=22&aff_sub2=&aff_sub3=&aff_sub4=17at&tracker=cg&language=&aff_sub6=&aff_sub7=&aff_sub8=&aff_sub9=&aff_sub10=&bzkbzk=gb",
+        "mode": "headers",
+        "verbosity": "verbose"
+    }
+} 

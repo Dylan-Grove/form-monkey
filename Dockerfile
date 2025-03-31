@@ -1,64 +1,66 @@
-FROM python:3.9-slim
+FROM python:3.10-slim
 
-# Install Chrome dependencies and Chrome
+# Install Chrome and dependencies
 RUN apt-get update && apt-get install -y \
     wget \
     gnupg \
     unzip \
-    xvfb \
-    libxi6 \
-    libgconf-2-4 \
-    curl \
     fonts-liberation \
     libasound2 \
     libatk-bridge2.0-0 \
     libatk1.0-0 \
     libatspi2.0-0 \
     libcups2 \
-    libdbus-1-3 \
     libdrm2 \
     libgbm1 \
     libgtk-3-0 \
     libnspr4 \
     libnss3 \
-    libu2f-udev \
-    libvulkan1 \
     libxcomposite1 \
     libxdamage1 \
     libxfixes3 \
     libxkbcommon0 \
     libxrandr2 \
-    && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list \
+    xdg-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Chrome
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list \
     && apt-get update && apt-get install -y google-chrome-stable \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
-# Install Chrome WebDriver
-RUN wget -q "https://storage.googleapis.com/chrome-for-testing-public/134.0.6998.165/linux64/chromedriver-linux64.zip" \
-    && unzip chromedriver-linux64.zip -d /usr/local/bin \
-    && mv /usr/local/bin/chromedriver-linux64/chromedriver /usr/local/bin/ \
+# Install chromedriver
+RUN CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d. -f1) \
+    && CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION") \
+    && wget -q "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip" \
+    && unzip chromedriver_linux64.zip -d /usr/local/bin \
     && chmod +x /usr/local/bin/chromedriver \
-    && rm -r /usr/local/bin/chromedriver-linux64 \
-    && rm chromedriver-linux64.zip
+    && rm chromedriver_linux64.zip
 
+# Set working directory
 WORKDIR /app
 
+# Copy requirements file
 COPY requirements.txt .
-RUN pip install -r requirements.txt
 
-COPY main.py .
-COPY mode_submit.py .
-COPY mode_sql_inject.py .
-COPY utils.py .
-COPY form_config.json .
-COPY random_data.json .
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-ENV FORM_CONFIG="default"
-ENV VERBOSITY="balanced"
-ENV MIN_INTERVAL=""
-ENV MAX_INTERVAL=""
-ENV TARGET_URL=""
-ENV DOCKER_CONTAINER="true"
-ENV PYTHONUNBUFFERED=1
+# Set environment variable to indicate Docker environment
+ENV DOCKER_CONTAINER=true
 
-CMD ["python", "main.py"] 
+# Copy the rest of the code
+COPY . .
+
+# Add src directory to Python path
+ENV PYTHONPATH=/app
+
+# Create required directories
+RUN mkdir -p logs reports
+
+# Set entrypoint
+ENTRYPOINT ["python", "src/main.py"]
+
+# Default command
+CMD ["--mode", "submit"] 
