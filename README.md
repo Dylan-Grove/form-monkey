@@ -16,24 +16,17 @@ Form Monkey is an automated form filling and security testing tool designed to h
 
 ```
 form-monkey/
-├── src/                    # Source code
-│   ├── config/             # Configuration files
-│   │   └── config.json     # Default configuration
-│   ├── data/               # Data files
-│   │   └── random_data.json # Random data for form filling
-│   ├── modes/              # Testing modes
-│   │   ├── __init__.py     # Package initialization
-│   │   ├── submit.py       # Form submission module
-│   │   ├── sql_inject.py   # SQL injection testing module
-│   │   ├── xss.py          # XSS testing module
-│   │   ├── csrf.py         # CSRF testing module
-│   │   ├── headers.py      # Security headers testing module
-│   │   └── comprehensive.py # Comprehensive testing module
-│   └── utils/              # Utility functions
-│       ├── __init__.py     # Package initialization
-│       ├── utils.py        # General utilities
-│       └── security_report.py # Security report generation
-├── main.py                 # Main entry point (legacy)
+├── config.json             # Default configuration
+├── main.py                 # Main entry point
+├── mode_submit.py          # Form submission module
+├── mode_sql_inject.py      # SQL injection testing module
+├── mode_xss.py             # XSS testing module
+├── mode_csrf.py            # CSRF testing module
+├── mode_headers.py         # Security headers testing module
+├── mode_comprehensive.py   # Comprehensive testing module
+├── security_report.py      # Security report generation
+├── utils.py                # Utility functions
+├── random_data.json        # Random data for form filling
 ├── Dockerfile              # Docker configuration
 └── README.md               # Project documentation
 ```
@@ -75,28 +68,28 @@ Form Monkey can be run in different modes to test various aspects of web applica
 
 ```bash
 # Run form submission with default configuration
-python src/main.py --mode submit
+python main.py --mode submit
 
 # Run SQL injection test
-python src/main.py --mode sql_inject
+python main.py --mode sql_inject
 
 # Run XSS test
-python src/main.py --mode xss
+python main.py --mode xss
 
 # Run CSRF test
-python src/main.py --mode csrf
+python main.py --mode csrf
 
 # Run security headers test
-python src/main.py --mode headers
+python main.py --mode headers
 
 # Run comprehensive test (all modes)
-python src/main.py --mode comprehensive
+python main.py --mode comprehensive
 
 # Generate HTML report
-python src/main.py --mode comprehensive --report
+python main.py --mode comprehensive --report
 
 # Generate specific report format
-python src/main.py --mode comprehensive --report --report-format json
+python main.py --mode comprehensive --report --report-format json
 ```
 
 ### Using Configuration Files
@@ -104,7 +97,7 @@ python src/main.py --mode comprehensive --report --report-format json
 You can specify a custom configuration file:
 
 ```bash
-python src/main.py --config my_config.json --mode submit
+python main.py --config my_config.json --mode submit
 ```
 
 ### Using Docker
