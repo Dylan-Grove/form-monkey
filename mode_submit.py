@@ -29,17 +29,16 @@ def setup_browser() -> uc.Chrome:
     Returns:
         Configured Chrome WebDriver instance
     """
-    options = uc.ChromeOptions()
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
+    # Create a simple logger for this function
+    logger = logging.getLogger(__name__)
     
-    # Headless mode in Docker
-    if os.environ.get("DOCKER_CONTAINER"):
-        options.add_argument("--headless")
+    # Create minimal config
+    config = {
+        "name": "submit_test_browser",
+    }
     
-    driver = uc.Chrome(options=options)
-    driver.maximize_window()
-    return driver
+    # Use the centralized setup_driver function from utils
+    return utils.setup_driver(config, logger)
 
 def fill_form_field(
     driver: uc.Chrome,
@@ -171,60 +170,157 @@ def submit_form(
 
 def run_submit_mode(context: Dict[str, Any]) -> None:
     """
-    Main function to run the form submission mode.
+    Run form submission mode.
     
     Args:
-        context: Application context containing configuration and other data
+        context: Application context containing config and logger
     """
     config = context["config"]
-    logger = context.get("logger", logging.getLogger())
+    logger = context["logger"]
     
-    # Get the target URL
+    logger.info("Starting form submission mode")
+    logger.info(f"Configuration: {config.get('name', 'default')}")
+    
+    # Get timing settings
+    timing_config = config.get("timing", {})
+    min_interval = timing_config.get("min_interval", 300)  # 5 minutes default
+    max_interval = timing_config.get("max_interval", 2700)  # 45 minutes default
+    
+    # Get target URL
     url = config.get("url")
     if not url:
-        logger.error("No URL defined in configuration")
+        logger.error("No URL specified in configuration")
         return
     
-    logger.info(f"Starting form submission to URL: {url}")
-    logger.info(f"Using configuration: {json.dumps(config, indent=2)}")
-    
-    # Set up the browser
-    driver = setup_browser()
+    # Initialize counters
+    submission_count = 0
+    success_count = 0
+    failure_count = 0
+    consecutive_failures = 0  # Track consecutive failures to avoid endless loops
+    max_consecutive_failures = 3
     
     try:
-        # Navigate to the form
-        driver.get(url)
-        logger.info("Page loaded successfully")
-        
-        # Wait for page to fully load
-        time.sleep(3)
-        
-        # Fill each field in the form
-        fields = config.get("fields", {})
-        
-        for field_name, field_config in fields.items():
-            if field_config.get("required", False):
-                fill_form_field(driver, field_name, field_config, context, logger)
-            elif random.random() < 0.8:  # 80% chance to fill non-required fields
-                fill_form_field(driver, field_name, field_config, context, logger)
-        
-        # Submit the form
-        submit_form(driver, config, context, logger)
-        
-        # Wait for submission to complete
-        time.sleep(5)
-        
-        # Calculate next submission interval
-        interval = utils.get_submission_interval(context)
-        
-        logger.info(f"Form submission completed. Next submission in {interval} seconds")
-        
-        # Wait for the specified interval before next submission
-        time.sleep(interval)
-        
+        while True:
+            submission_count += 1
+            logger.info(f"Starting submission #{submission_count}")
+            
+            driver = None
+            try:
+                # Setup WebDriver with retry mechanism already built into utils.setup_driver
+                logger.info("Setting up WebDriver for submission")
+                driver = utils.setup_driver(config, logger)
+                
+                # Navigate to the form URL
+                logger.info(f"Navigating to {url}")
+                driver.get(url)
+                
+                # Wait for the page to load
+                time.sleep(3)
+                
+                # Get form fields from the configuration
+                fields = config.get("fields", {})
+                if not fields:
+                    logger.error("No form fields defined in the configuration")
+                    failure_count += 1
+                    consecutive_failures += 1
+                    continue
+                
+                # Log fields that will be filled
+                field_names = [name for name in fields.keys() if name != "submit_button"]
+                logger.info(f"Configuration defines {len(field_names)} fields to fill: {', '.join(field_names)}")
+                
+                # Fill form fields with random data (only those explicitly defined in config)
+                field_fill_count = 0
+                for field_name, field_info in fields.items():
+                    if field_name == "submit_button":
+                        continue
+                        
+                    logger.info(f"Filling field: {field_name}")
+                    success = utils.fill_field_with_random_data(driver, field_name, field_info, logger)
+                    if success:
+                        field_fill_count += 1
+                        logger.info(f"Successfully filled field: {field_name}")
+                    else:
+                        # Don't treat this as a critical error if the field is marked as not required
+                        if field_info.get("required", True):
+                            logger.warning(f"Failed to fill required field: {field_name}")
+                        else:
+                            logger.info(f"Skipped optional field: {field_name}")
+                
+                # Check if enough fields were filled
+                required_fields = sum(1 for f, info in fields.items() 
+                                     if f != "submit_button" and info.get("required", True))
+                
+                if field_fill_count == 0:
+                    logger.error("Failed to fill any fields, possible configuration issue")
+                    failure_count += 1
+                    consecutive_failures += 1
+                    continue
+                elif field_fill_count < required_fields:
+                    logger.warning(f"Filled only {field_fill_count} of {required_fields} required fields")
+                else:
+                    logger.info(f"Filled all {required_fields} required fields")
+                
+                # Find and click the submit button
+                submit_button = utils.find_submit_button(driver, config)
+                
+                if submit_button:
+                    logger.info("Found submit button, clicking...")
+                    submit_button.click()
+                    
+                    # Wait for submission to complete
+                    time.sleep(5)
+                    
+                    # Success!
+                    logger.info("Form submitted successfully")
+                    success_count += 1
+                    consecutive_failures = 0  # Reset consecutive failures on success
+                else:
+                    logger.error("Submit button not found")
+                    failure_count += 1
+                    consecutive_failures += 1
+                
+            except (TimeoutException, NoSuchElementException, 
+                    ElementNotInteractableException, StaleElementReferenceException) as e:
+                logger.error(f"Selenium error during submission: {str(e)}")
+                failure_count += 1
+                consecutive_failures += 1
+                
+            except Exception as e:
+                logger.error(f"Unexpected error during submission: {str(e)}")
+                failure_count += 1
+                consecutive_failures += 1
+            
+            finally:
+                # Close the browser
+                if driver:
+                    try:
+                        driver.quit()
+                        logger.info("Browser closed successfully")
+                    except Exception as e:
+                        logger.warning(f"Error closing browser: {str(e)}")
+                
+                # Log submission stats
+                logger.info(f"Submission stats - Total: {submission_count}, "
+                           f"Success: {success_count}, Failures: {failure_count}")
+                
+                # Check for too many consecutive failures
+                if consecutive_failures >= max_consecutive_failures:
+                    logger.error(f"Too many consecutive failures ({consecutive_failures}). Pausing for recovery.")
+                    # Longer pause for recovery
+                    time.sleep(60)
+                    consecutive_failures = 0
+                
+                # Sleep before next submission
+                sleep_time = random.randint(min_interval, max_interval)
+                next_time = time.strftime("%H:%M:%S", time.localtime(time.time() + sleep_time))
+                logger.info(f"Sleeping for {sleep_time} seconds. Next submission at {next_time}")
+                time.sleep(sleep_time)
+    
+    except KeyboardInterrupt:
+        logger.info("Keyboard interrupt detected, stopping submissions")
     except Exception as e:
-        logger.error(f"Error during form submission: {e}")
+        logger.error(f"Fatal error in submission loop: {str(e)}")
     finally:
-        # Close the browser
-        driver.quit()
-        logger.info("Browser closed") 
+        logger.info(f"Form submission completed. Total submissions: {submission_count}, "
+                   f"Successful: {success_count}, Failed: {failure_count}") 

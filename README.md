@@ -1,179 +1,192 @@
-# Form Monkey - Automated Form Submission Tool
+# Form Monkey
 
-A Python-based tool for automated form submissions with support for various phone number formats, SQL injection testing, and anti-bot detection.
+Form Monkey is an automated form filling and security testing tool designed to help test web applications for various vulnerabilities, including SQL injection, XSS, CSRF, and security headers.
 
 ## Features
 
-- Automated form submission with random delays
-- Support for multiple phone number formats:
-  - Canadian (e.g., (416) 555-1234)
-  - American (e.g., (212) 555-1234)
-  - Russian (e.g., +7 (495) 123-45-67)
-  - Chinese (e.g., +86 10 1234 5678)
-  - Mexican (e.g., +52 (55) 1234-5678)
-  - UK (e.g., +44 20 7123 4567)
-  - Australian (e.g., +61 2 1234 5678)
-- Anti-bot detection evasion
-- Configurable submission intervals
-- Verbosity levels for logging
-- SQL Injection testing for form security
-- Docker support
+- **Form Submission**: Automate form submissions with random or predefined data
+- **SQL Injection Testing**: Test forms for SQL injection vulnerabilities
+- **XSS Testing**: Test forms for Cross-Site Scripting vulnerabilities
+- **CSRF Analysis**: Analyze forms for Cross-Site Request Forgery protections
+- **Security Headers Analysis**: Evaluate HTTP security headers
+- **Comprehensive Testing**: Run all testing modes in sequence or parallel
+- **Detailed Reporting**: Generate HTML, JSON, or PDF security reports
 
-## Configuration
+## Directory Structure
 
-### Form Configuration (form_config.json)
-
-The tool uses a JSON configuration file to define form fields, operation modes, and their properties:
-
-```json
-{
-    "example_form": {
-        "url": "https://example.com/form",
-        "mode": "submit",  // "submit" or "sql_inject"
-        "verbosity": "balanced",
-        "timing": {
-            "min_interval": 300,
-            "max_interval": 2700
-        },
-        "fields": {
-            "first_name": {
-                "selector": "input[name='first_name']",
-                "type": "css",
-                "required": true,
-                "min_length": 2
-            },
-            "phone": {
-                "selector": "input[name='phone']",
-                "type": "css",
-                "required": true,
-                "area_code_type": ["canadian", "american"]  // Can be a single string or array of types
-            }
-        }
-    },
-    "sql_injection_example": {
-        "url": "https://example.com/form",
-        "mode": "sql_inject",
-        "verbosity": "balanced",
-        "fields": {
-            "first_name": {
-                "selector": "input[name='first_name']",
-                "type": "css",
-                "required": true
-            }
-        },
-        "sql_injection_settings": {
-            "test_all_fields": true,
-            "max_attempts_per_field": 10,
-            "payload_categories": ["basic", "error", "time", "stacked", "complex"]
-        }
-    }
-}
+```
+form-monkey/
+├── src/                    # Source code
+│   ├── config/             # Configuration files
+│   │   └── config.json     # Default configuration
+│   ├── data/               # Data files
+│   │   └── random_data.json # Random data for form filling
+│   ├── modes/              # Testing modes
+│   │   ├── __init__.py     # Package initialization
+│   │   ├── submit.py       # Form submission module
+│   │   ├── sql_inject.py   # SQL injection testing module
+│   │   ├── xss.py          # XSS testing module
+│   │   ├── csrf.py         # CSRF testing module
+│   │   ├── headers.py      # Security headers testing module
+│   │   └── comprehensive.py # Comprehensive testing module
+│   └── utils/              # Utility functions
+│       ├── __init__.py     # Package initialization
+│       ├── utils.py        # General utilities
+│       └── security_report.py # Security report generation
+├── main.py                 # Main entry point (legacy)
+├── Dockerfile              # Docker configuration
+└── README.md               # Project documentation
 ```
 
-### Operation Modes
+## Installation
 
-The tool supports two operation modes:
+### Prerequisites
 
-1. **Submit Mode** (`"mode": "submit"`): Automated form submission with random data
-2. **SQL Injection Mode** (`"mode": "sql_inject"`): Tests the form for SQL injection vulnerabilities
+- Python 3.7+
+- Chrome browser
+- ChromeDriver (for Selenium)
 
-You can specify the mode in three ways:
-- In the form configuration's `mode` parameter
-- Using the `--mode` or `-m` command-line option
-- Setting the `MODE` environment variable
-
-### Phone Number Formats
-
-The tool supports various phone number formats based on the `area_code_type` configuration:
-
-- Single type: `"area_code_type": "canadian"`
-- Multiple types: `"area_code_type": ["canadian", "american"]`
-
-When multiple types are specified, the tool will randomly choose one type for each submission.
-
-### SQL Injection Settings
-
-When using SQL Injection mode, you can customize the testing behavior:
-
-- `test_all_fields`: Whether to test all form fields or stop after finding a vulnerability
-- `max_attempts_per_field`: Limit the number of payloads to test per field (0 = test all)
-- `payload_categories`: Categories of SQL injection payloads to test:
-  - `basic`: Simple SQL injection tests like `' OR '1'='1'`
-  - `error`: Error-based SQL injection techniques
-  - `time`: Time-based SQL injection tests
-  - `stacked`: Tests for stacked queries (multiple statements)
-  - `complex`: More advanced SQL injection patterns
-  - `nosql`: NoSQL injection patterns
-  - `xss`: SQL injection combined with XSS
-  - `encoding`: URL-encoded SQL injection tests
-
-## Usage
-
-### Command Line Arguments
+### Using pip
 
 ```bash
-python main.py [options]
+# Clone the repository
+git clone https://github.com/username/form-monkey.git
+cd form-monkey
+
+# Install dependencies
+pip install -r requirements.txt
 ```
 
-Available options:
-- `--config` or `-c`: Specify the form configuration to use
-- `--mode` or `-m`: Operation mode (submit/sql_inject)
-- `--verbosity` or `-v`: Set logging verbosity (minimal/balanced/verbose)
-- `--min-interval`: Override minimum time between submissions
-- `--max-interval`: Override maximum time between submissions
-- `--url`: Override the URL from the configuration
-
-### Running with Docker
+### Using Docker
 
 ```bash
 # Build the Docker image
 docker build -t form-monkey .
 
-# Run in form submission mode
-docker run -it --rm -e FORM_CONFIG=example_form -e MODE=submit form-monkey
-
-# Run in SQL injection mode
-docker run -it --rm -e FORM_CONFIG=example_form -e MODE=sql_inject form-monkey
-
-# Override the mode specified in the config file
-docker run -it --rm -e FORM_CONFIG=sql_injection_example -e MODE=submit form-monkey
+# Run the Docker container
+docker run --rm form-monkey
 ```
 
-### Environment Variables
+## Usage
 
-- `FORM_CONFIG`: Form configuration to use
-- `MODE`: Operation mode (submit/sql_inject)
-- `VERBOSITY`: Logging verbosity level
-- `MIN_INTERVAL`: Minimum time between submissions
-- `MAX_INTERVAL`: Maximum time between submissions
-- `TARGET_URL`: Override the URL from the configuration
+Form Monkey can be run in different modes to test various aspects of web applications.
 
-## Project Structure
+### Basic Usage
 
-The codebase is organized as follows:
+```bash
+# Run form submission with default configuration
+python src/main.py --mode submit
 
-- `main.py`: Entry point that parses command-line arguments and handles configuration
-- `mode_submit.py`: Implementation of the form submission mode
-- `mode_sql_inject.py`: Implementation of the SQL injection testing mode
-- `utils.py`: Common utility functions used by both modes
-- `form_config.json`: Configuration for different forms and modes
-- `random_data.json`: Data for random generation of names, emails, etc.
+# Run SQL injection test
+python src/main.py --mode sql_inject
 
-## Best Practices for SQL Injection Prevention
+# Run XSS test
+python src/main.py --mode xss
 
-- Use parameterized queries/prepared statements
-- Implement input validation and sanitization
-- Apply the principle of least privilege for database users
-- Use stored procedures for complex operations
-- Escape special characters in user input
-- Consider using an ORM (Object-Relational Mapping) library
+# Run CSRF test
+python src/main.py --mode csrf
 
-## Requirements
+# Run security headers test
+python src/main.py --mode headers
 
-- Python 3.9+
-- Chrome/Chromium browser
-- Docker (optional)
+# Run comprehensive test (all modes)
+python src/main.py --mode comprehensive
+
+# Generate HTML report
+python src/main.py --mode comprehensive --report
+
+# Generate specific report format
+python src/main.py --mode comprehensive --report --report-format json
+```
+
+### Using Configuration Files
+
+You can specify a custom configuration file:
+
+```bash
+python src/main.py --config my_config.json --mode submit
+```
+
+### Using Docker
+
+```bash
+# Run with Docker
+docker run --rm -e FORM=example_submit form-monkey
+
+# Run in verbose mode
+docker run --rm -e FORM=example_submit -e VERBOSITY=verbose form-monkey
+```
+
+## Configuration
+
+Form Monkey is configured via JSON files. Here's an example configuration:
+
+```json
+{
+  "verbosity": "balanced",
+  "timing": {
+    "element_wait_time": 10,
+    "min_interval": 300,
+    "max_interval": 2700
+  },
+  "example_submit": {
+    "url": "https://example.com/contact",
+    "fields": [
+      {
+        "id": "first_name",
+        "name": "first_name",
+        "type": "css",
+        "field_type": "first_name",
+        "required": true
+      },
+      {
+        "id": "last_name",
+        "name": "last_name",
+        "type": "css",
+        "field_type": "last_name",
+        "required": true
+      }
+    ],
+    "submit_button": {
+      "type": "css",
+      "selector": "button[type='submit']"
+    },
+    "verbosity": "balanced",
+    "submissions": 1
+  }
+}
+```
+
+## Environment Variables
+
+The following environment variables can be used to configure Form Monkey:
+
+- `FORM`: Name of the form configuration to use
+- `VERBOSITY`: Logging verbosity level (quiet, minimal, normal, balanced, verbose, debug)
+- `CONFIG_PATH`: Path to the configuration file
+- `MIN_INTERVAL`: Minimum interval between form submissions (in seconds)
+- `MAX_INTERVAL`: Maximum interval between form submissions (in seconds)
+
+## Security Reports
+
+Form Monkey can generate security reports in various formats:
+
+- **HTML**: Interactive reports with charts and detailed findings
+- **JSON**: Machine-readable reports for integration with other tools
+- **PDF**: Portable document format reports for sharing
+
+Reports include:
+
+- Executive summary of findings
+- Vulnerability counts by severity
+- Charts and visualizations
+- Detailed findings with recommendations
+- Test results for each mode
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-MIT License
+This project is licensed under the MIT License - see the LICENSE file for details.

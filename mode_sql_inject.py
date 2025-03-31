@@ -72,17 +72,16 @@ def setup_browser() -> uc.Chrome:
     Returns:
         Configured Chrome WebDriver instance
     """
-    options = uc.ChromeOptions()
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
+    # Create a simple logger for this function
+    logger = logging.getLogger(__name__)
     
-    # Headless mode in Docker
-    if os.environ.get("DOCKER_CONTAINER"):
-        options.add_argument("--headless")
+    # Create minimal config
+    config = {
+        "name": "sql_inject_test_browser",
+    }
     
-    driver = uc.Chrome(options=options)
-    driver.maximize_window()
-    return driver
+    # Use the centralized setup_driver function from utils
+    return utils.setup_driver(config, logger)
 
 def run_sql_injection_mode(context: Dict[str, Any]) -> None:
     """
