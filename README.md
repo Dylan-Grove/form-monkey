@@ -1,6 +1,8 @@
 # Form Monkey
 
-Form Monkey is an automated form filling and security testing tool designed to help test web applications for various vulnerabilities, including SQL injection, XSS, CSRF, and security headers.
+Form Monkey is an automated form filling and security testing tool designed to help test web applications for various vulnerabilities, including SQL injection, XSS, CSRF, and security headers. It uses a selenium driverwith anti-bot detection patches to send fake data on submission forms, try SQL injections, and more, running on a docker container.
+
+All configuration of the container uses config.json. You can also launch the container with environment variable flags if you don't want to use a config file.
 
 ## Features
 
@@ -33,22 +35,11 @@ form-monkey/
 
 ## Installation
 
-### Prerequisites
+### Prerequisites (Installed with the dockerfile to the container)
 
 - Python 3.7+
 - Chrome browser
 - ChromeDriver (for Selenium)
-
-### Using pip
-
-```bash
-# Clone the repository
-git clone https://github.com/username/form-monkey.git
-cd form-monkey
-
-# Install dependencies
-pip install -r requirements.txt
-```
 
 ### Using Docker
 
@@ -94,7 +85,7 @@ python main.py --mode comprehensive --report --report-format json
 
 ### Using Configuration Files
 
-You can specify a custom configuration file:
+You can specify a custom configuration file in the container (If none is provided, it will use the default):
 
 ```bash
 python main.py --config my_config.json --mode submit
